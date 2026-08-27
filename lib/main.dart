@@ -3,6 +3,7 @@ import 'package:maa_tara/appbar.dart';
 import 'package:maa_tara/bottom_tabbar.dart';
 import 'package:maa_tara/dashboard.dart';
 import 'package:maa_tara/job.dart';
+import 'package:maa_tara/more.dart';
 
 void main() {
   runApp(const MyApp());
@@ -60,6 +61,8 @@ class _HomePageState extends State<HomePage> {
         return const DashboardPage();
       case 1:
         return const JobPage();
+      case 4:
+        return const MorePage();
       default:
         return Center(
           child: Text(
