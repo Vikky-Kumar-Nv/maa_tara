@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:maa_tara/appbar.dart';
 import 'package:maa_tara/bottom_tabbar.dart';
+import 'package:maa_tara/colors.dart';
 import 'package:maa_tara/dashboard.dart';
 import 'package:maa_tara/job.dart';
 import 'package:maa_tara/more.dart';
@@ -18,12 +19,12 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0A1628),
-        canvasColor: const Color(0xFF0A1628),
-        cardColor: const Color(0xFF162336),
+        scaffoldBackgroundColor: AppColors.bg,
+        canvasColor: AppColors.bg,
+        cardColor: AppColors.card,
         colorScheme: const ColorScheme.dark(
-          surface: Color(0xFF0A1628),
-          primary: Color(0xFFE8A020),
+          surface: AppColors.bg,
+          primary: AppColors.accent,
         ),
       ),
       home: const HomePage(),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:maa_tara/colors.dart';
 
 class Navbar extends StatelessWidget implements PreferredSizeWidget {
   const Navbar({super.key});
@@ -6,22 +7,35 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: const Color(0xFF142030),
+      backgroundColor: AppColors.card,
+      elevation: 0,
 
       // Left side menu
       leading: IconButton(
-        icon: const Icon(Icons.menu, color: Colors.white),
+        icon: const Icon(Icons.menu, color: AppColors.white),
         onPressed: () {
-          print("Menu clicked");
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Menu clicked'),
+              backgroundColor: AppColors.card,
+              duration: Duration(milliseconds: 800),
+            ),
+          );
         },
       ),
 
       // Right side notification
       actions: [
         IconButton(
-          icon: const Icon(Icons.notifications_none, color: Colors.white),
+          icon: const Icon(Icons.notifications_none, color: AppColors.white),
           onPressed: () {
-            print("Notification clicked");
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Notifications clicked'),
+                backgroundColor: AppColors.card,
+                duration: Duration(milliseconds: 800),
+              ),
+            );
           },
         ),
       ],

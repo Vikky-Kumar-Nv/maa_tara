@@ -1,22 +1,10 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:maa_tara/add_customer.dart';
+import 'package:maa_tara/colors.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  Color Palette — extracted from app screenshots
-// ─────────────────────────────────────────────────────────────────────────────
-class _C {
-  static const bg = Color(0xFF0A1628); // main background (dark navy)
-  static const card = Color(0xFF162336); // card background
-  static const accent = Color(0xFFE8A020); // golden/amber accent
-  static const white = Colors.white;
-  static const muted = Color(0xFF8FAABB); // muted blue-grey text
-  static const green = Color(0xFF2ECC71);
-  static const red = Color(0xFFE53935);
-  static const blue = Color(0xFF2196F3);
-  static const amber = Color(0xFFFFC107);
-  static const divider = Color(0xFF1E3048);
-}
+typedef _C = AppColors;
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Dashboard Page
@@ -418,31 +406,50 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildActionCard(_ActionItem a) {
-    return Container(
-      width: 72,
-      decoration: BoxDecoration(
-        color: _C.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _C.divider, width: 1),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Color(0xFFE8A020).withOpacity(0.15),
-              shape: BoxShape.circle,
+    return InkWell(
+      onTap: () {
+        if (a.label.contains('Customer')) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AddCustomerPage()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Opening ${a.label.replaceAll("\n", " ")}...'),
+              backgroundColor: _C.card,
+              duration: const Duration(milliseconds: 800),
             ),
-            child: Icon(a.icon, color: _C.accent, size: 18),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            a.label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: _C.white, fontSize: 9, height: 1.3),
-          ),
-        ],
+          );
+        }
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: 72,
+        decoration: BoxDecoration(
+          color: _C.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _C.divider, width: 1),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE8A020).withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(a.icon, color: _C.accent, size: 18),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              a.label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: _C.white, fontSize: 9, height: 1.3),
+            ),
+          ],
+        ),
       ),
     );
   }

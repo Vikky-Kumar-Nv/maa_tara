@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:maa_tara/colors.dart';
 
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -12,17 +13,12 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Screenshot se exact colors:
-    // Background : #0D1B2A  (dark navy — same as app background)
-    // Selected   : Colors.white  + amber/yellow indicator line
-    // Unselected : #5A7290  (muted blue-grey)
-
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF0D1B2A), // dark navy — screenshot ka exact background
+        color: AppColors.navbarBg,
         border: Border(
           top: BorderSide(
-            color: Color(0xFF1E3048), // subtle divider line
+            color: AppColors.divider,
             width: 1,
           ),
         ),

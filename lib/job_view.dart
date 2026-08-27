@@ -2,23 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:maa_tara/colors.dart';
 import 'package:maa_tara/job.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  Color Palette — consistent with app theme
-// ─────────────────────────────────────────────────────────────────────────────
-class _C {
-  static const bg = Color(0xFF0A1628);
-  static const card = Color(0xFF162336);
-  static const accent = Color(0xFFE8A020);
-  static const white = Colors.white;
-  static const muted = Color(0xFF8FAABB);
-  static const green = Color(0xFF2ECC71);
-  static const red = Color(0xFFE53935);
-  static const blue = Color(0xFF2196F3);
-  static const amber = Color(0xFFFF9800);
-  static const divider = Color(0xFF1E3048);
-}
+typedef _C = AppColors;
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Work View Page (Full Work Details)
@@ -39,12 +26,12 @@ class _WorkViewPageState extends State<WorkViewPage> {
   late WorkStatus _currentStatus;
   final ImagePicker _picker = ImagePicker();
 
-  List<String> _additionalRequirements = [
+  final List<String> _additionalRequirements = [
     'Check brake disc condition',
     'Check brake fluid level',
   ];
 
-  List<String> _workNotes = [
+  final List<String> _workNotes = [
     'Front brake pads replaced.\nBrake disc cleaned and brake fluid topped.',
   ];
 

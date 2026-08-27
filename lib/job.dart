@@ -1,21 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:maa_tara/colors.dart';
 import 'package:maa_tara/job_view.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  Color Palette — consistent with dashboard theme
-// ─────────────────────────────────────────────────────────────────────────────
-class _C {
-  static const bg = Color(0xFF0A1628);
-  static const card = Color(0xFF162336);
-  static const accent = Color(0xFFE8A020);
-  static const white = Colors.white;
-  static const muted = Color(0xFF8FAABB);
-  static const green = Color(0xFF2ECC71);
-  static const red = Color(0xFFE53935);
-  static const blue = Color(0xFF2196F3);
-  static const amber = Color(0xFFFF9800);
-  static const divider = Color(0xFF1E3048);
-}
+typedef _C = AppColors;
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Work Model
