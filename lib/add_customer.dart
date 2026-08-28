@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:maa_tara/colors.dart';
+import 'package:maa_tara/create_work.dart';
 import 'package:maa_tara/customer_list.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -640,7 +641,17 @@ class _AddCustomerPageState extends State<AddCustomerPage> {
             ? 'Customer "$customerName" ($vehicleNo) saved! Proceeding to create work job card.'
             : 'Customer "$customerName" ($vehicleNo) has been saved to the database.',
         onDismiss: () {
-          Navigator.pop(context, newCustomer);
+          if (createWork) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    CreateWorkPage(preselectedCustomer: newCustomer),
+              ),
+            );
+          } else {
+            Navigator.pop(context, newCustomer);
+          }
         },
       );
     }

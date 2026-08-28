@@ -4,7 +4,9 @@ import 'package:maa_tara/bottom_tabbar.dart';
 import 'package:maa_tara/colors.dart';
 import 'package:maa_tara/dashboard.dart';
 import 'package:maa_tara/job.dart';
+import 'package:maa_tara/login.dart';
 import 'package:maa_tara/more.dart';
+import 'package:maa_tara/staff_list.dart';
 
 void main() {
   runApp(const MyApp());
@@ -27,7 +29,7 @@ class MyApp extends StatelessWidget {
           primary: AppColors.accent,
         ),
       ),
-      home: const HomePage(),
+      home: const LoginPage(),
     );
   }
 }
@@ -62,6 +64,8 @@ class _HomePageState extends State<HomePage> {
         return const DashboardPage();
       case 1:
         return const JobPage();
+      case 3:
+        return const StaffListPage();
       case 4:
         return const MorePage();
       default:

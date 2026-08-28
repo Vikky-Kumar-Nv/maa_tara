@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:maa_tara/colors.dart';
 import 'package:maa_tara/customer_list.dart';
+import 'package:maa_tara/login.dart';
+import 'package:maa_tara/staff_list.dart';
 
 typedef _C = AppColors;
 
@@ -58,7 +60,12 @@ class MorePage extends StatelessWidget {
       _MoreMenuItem(
         title: 'Attendance',
         icon: Icons.assignment_ind_outlined,
-        onTap: () => _handleItemTap(context, 'Attendance'),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const StaffListPage()),
+          );
+        },
       ),
       _MoreMenuItem(
         title: 'Reports',
@@ -352,12 +359,12 @@ class MorePage extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: () {
                           Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Logged out successfully'),
-                              backgroundColor: _C.card,
-                              duration: Duration(seconds: 2),
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginPage(),
                             ),
+                            (route) => false,
                           );
                         },
                         style: ElevatedButton.styleFrom(

@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:maa_tara/add_customer.dart';
 import 'package:maa_tara/colors.dart';
+import 'package:maa_tara/create_work.dart';
+import 'package:maa_tara/staff_list.dart';
 
 typedef _C = AppColors;
 
@@ -412,6 +414,16 @@ class _DashboardPageState extends State<DashboardPage> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AddCustomerPage()),
+          );
+        } else if (a.label.contains('Work')) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CreateWorkPage()),
+          );
+        } else if (a.label.contains('Staff')) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const StaffListPage()),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:maa_tara/colors.dart';
+import 'package:maa_tara/create_work.dart';
 import 'package:maa_tara/customer_list.dart';
 import 'package:maa_tara/job_view.dart';
 
@@ -323,7 +324,14 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
           child: _quickActionButton(
             icon: Icons.work_outline,
             label: 'Create Work',
-            onTap: () => _showActionFeedback('Creating work for ${_c.name}...'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CreateWorkPage(preselectedCustomer: _c),
+                ),
+              );
+            },
           ),
         ),
       ],

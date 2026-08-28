@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:maa_tara/add_customer.dart';
 import 'package:maa_tara/colors.dart';
+import 'package:maa_tara/create_work.dart';
 import 'package:maa_tara/customer_details.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -762,11 +763,10 @@ class _CustomerListPageState extends State<CustomerListPage> {
   }
 
   void _createWorkForCustomer(CustomerModel c) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Creating work order for ${c.name} (${c.vehiclePlate})...'),
-        backgroundColor: AppColors.card,
-        duration: const Duration(seconds: 1),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CreateWorkPage(preselectedCustomer: c),
       ),
     );
   }

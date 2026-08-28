@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:maa_tara/colors.dart';
+import 'package:maa_tara/create_work.dart';
 import 'package:maa_tara/job_view.dart';
 
 typedef _C = AppColors;
@@ -46,32 +47,10 @@ class WorkModel {
 typedef JobModel = WorkModel;
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Work Page (Body content for Work Tab)
+//  Global In-Memory Work Repository (Dynamic State)
 // ─────────────────────────────────────────────────────────────────────────────
-class WorkPage extends StatefulWidget {
-  const WorkPage({super.key});
-
-  @override
-  State<WorkPage> createState() => _WorkPageState();
-}
-
-typedef JobPage = WorkPage;
-
-class _WorkPageState extends State<WorkPage> {
-  String _selectedFilter = 'All';
-  String _searchQuery = '';
-  bool _isSearchExpanded = false;
-  final TextEditingController _searchController = TextEditingController();
-
-  final List<String> _filters = [
-    'All',
-    'Pending',
-    'In Progress',
-    'On Hold',
-    'Completed',
-  ];
-
-  final List<WorkModel> _allWorks = [
+class WorkRepository {
+  static final List<WorkModel> _works = [
     WorkModel(
       workId: 'WORK-1058',
       customerName: 'Rahul Sharma',
@@ -154,8 +133,41 @@ class _WorkPageState extends State<WorkPage> {
     ),
   ];
 
+  static List<WorkModel> get works => _works;
+
+  static void addWork(WorkModel work) {
+    _works.insert(0, work);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Work Page (Body content for Work Tab)
+// ─────────────────────────────────────────────────────────────────────────────
+class WorkPage extends StatefulWidget {
+  const WorkPage({super.key});
+
+  @override
+  State<WorkPage> createState() => _WorkPageState();
+}
+
+typedef JobPage = WorkPage;
+
+class _WorkPageState extends State<WorkPage> {
+  String _selectedFilter = 'All';
+  String _searchQuery = '';
+  bool _isSearchExpanded = false;
+  final TextEditingController _searchController = TextEditingController();
+
+  final List<String> _filters = [
+    'All',
+    'Pending',
+    'In Progress',
+    'On Hold',
+    'Completed',
+  ];
+
   List<WorkModel> get _filteredWorks {
-    return _allWorks.where((work) {
+    return WorkRepository.works.where((work) {
       // Filter by status tab
       bool matchesStatus = true;
       if (_selectedFilter == 'Pending') {
@@ -190,6 +202,19 @@ class _WorkPageState extends State<WorkPage> {
     super.dispose();
   }
 
+  Future<void> _openCreateWorkPage() async {
+    final result = await Navigator.push<WorkModel>(
+      context,
+      MaterialPageRoute(builder: (context) => const CreateWorkPage()),
+    );
+
+    if (result != null) {
+      setState(() {});
+    } else {
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final works = _filteredWorks;
@@ -199,15 +224,44 @@ class _WorkPageState extends State<WorkPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Page Title ─────────────────────────────────────────────────────
-          const Text(
-            'Work',
-            style: TextStyle(
-              color: _C.white,
-              fontSize: 26,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.3,
-            ),
+          // ── Page Header: Title + Create Work Button ────────────────────────
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Work',
+                style: TextStyle(
+                  color: _C.white,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.3,
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => _openCreateWorkPage(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _C.card,
+                  side: const BorderSide(color: _C.accent, width: 1),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  elevation: 0,
+                ),
+                icon: const Icon(Icons.add, color: _C.accent, size: 16),
+                label: const Text(
+                  'Create Work',
+                  style: TextStyle(
+                    color: _C.accent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 14),
 
