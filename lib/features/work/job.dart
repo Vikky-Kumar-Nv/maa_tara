@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:maa_tara/colors.dart';
-import 'package:maa_tara/create_work.dart';
-import 'package:maa_tara/job_view.dart';
+import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/features/work/create_work.dart';
+import 'package:maa_tara/features/work/job_view.dart';
 
 typedef _C = AppColors;
 
@@ -287,8 +287,8 @@ class _WorkPageState extends State<WorkPage> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: works.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (_, index) => _buildWorkCard(works[index]),
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              itemBuilder: (context, index) => _buildWorkCard(works[index]),
             ),
 
           const SizedBox(height: 24),
@@ -357,7 +357,7 @@ class _WorkPageState extends State<WorkPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 6),
         decoration: BoxDecoration(
-          color: isActive ? _C.accent.withOpacity(0.18) : _C.card,
+          color: isActive ? _C.accent.withValues(alpha: 0.18) : _C.card,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isActive ? _C.accent : _C.divider,
@@ -503,7 +503,7 @@ class _WorkPageState extends State<WorkPage> {
                   child: Image.network(
                     work.carImageUrl,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Center(
+                    errorBuilder: (context, error, stackTrace) => const Center(
                       child: Icon(
                         Icons.directions_car,
                         color: _C.muted,
@@ -617,7 +617,7 @@ class _WorkPageState extends State<WorkPage> {
                   child: Image.network(
                     work.staffAvatarUrl,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) =>
+                    errorBuilder: (context, error, stackTrace) =>
                         const Icon(Icons.person, color: _C.muted, size: 16),
                   ),
                 ),
@@ -717,9 +717,9 @@ class _WorkPageState extends State<WorkPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.16),
+        color: color.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.4), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
       ),
       child: Text(
         text,
@@ -774,7 +774,7 @@ class _WorkPageState extends State<WorkPage> {
       ),
       child: Column(
         children: [
-          Icon(Icons.search_off, size: 48, color: _C.muted.withOpacity(0.6)),
+          Icon(Icons.search_off, size: 48, color: _C.muted.withValues(alpha: 0.6)),
           const SizedBox(height: 12),
           const Text(
             'No Work Found',

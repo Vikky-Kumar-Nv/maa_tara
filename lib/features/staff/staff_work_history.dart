@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:maa_tara/colors.dart';
-import 'package:maa_tara/job.dart';
-import 'package:maa_tara/job_view.dart';
-import 'package:maa_tara/staff_list.dart';
+import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/features/staff/staff_list.dart';
+import 'package:maa_tara/features/work/job.dart';
+import 'package:maa_tara/features/work/job_view.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Staff Work Item Model
@@ -218,7 +218,7 @@ class _StaffWorkHistoryPageState extends State<StaffWorkHistoryPage> {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: list.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        separatorBuilder: (context, index) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
                           return _buildWorkHistoryCard(list[index]);
                         },
@@ -324,7 +324,7 @@ class _StaffWorkHistoryPageState extends State<StaffWorkHistoryPage> {
                   width: 48,
                   height: 48,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+                  errorBuilder: (context, error, stackTrace) => Container(
                     width: 48,
                     height: 48,
                     color: AppColors.inputFill,

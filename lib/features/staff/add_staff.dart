@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:maa_tara/colors.dart';
-import 'package:maa_tara/staff_list.dart';
+import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/features/staff/staff_list.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Add / Edit Staff Page

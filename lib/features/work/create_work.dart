@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:maa_tara/colors.dart';
-import 'package:maa_tara/customer_list.dart';
-import 'package:maa_tara/job.dart';
+import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/features/customers/customer_list.dart';
+import 'package:maa_tara/features/work/job.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Create Work Page

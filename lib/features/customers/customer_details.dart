@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:maa_tara/colors.dart';
-import 'package:maa_tara/create_work.dart';
-import 'package:maa_tara/customer_list.dart';
-import 'package:maa_tara/job_view.dart';
+import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/features/customers/customer_list.dart';
+import 'package:maa_tara/features/work/create_work.dart';
+import 'package:maa_tara/features/work/job_view.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Customer Details Page
@@ -491,7 +491,7 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: history.length,
-            separatorBuilder: (_, __) => const Divider(
+            separatorBuilder: (context, index) => const Divider(
               color: AppColors.divider,
               height: 1,
               thickness: 1,
@@ -619,7 +619,7 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: (photos.length > 4 ? 4 : photos.length) + 1,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            separatorBuilder: (context, index) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
               if (index < (photos.length > 4 ? 4 : photos.length)) {
                 return ClipRRect(
@@ -629,7 +629,7 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
                     width: 64,
                     height: 64,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
+                    errorBuilder: (context, error, stackTrace) => Container(
                       width: 64,
                       height: 64,
                       color: AppColors.card,

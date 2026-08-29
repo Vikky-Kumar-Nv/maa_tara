@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:maa_tara/colors.dart';
+import 'package:maa_tara/core/constants/colors.dart';
 
 class Navbar extends StatelessWidget implements PreferredSizeWidget {
   const Navbar({super.key});

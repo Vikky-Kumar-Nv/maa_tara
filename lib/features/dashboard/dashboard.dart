@@ -1,10 +1,10 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:maa_tara/add_customer.dart';
-import 'package:maa_tara/colors.dart';
-import 'package:maa_tara/create_work.dart';
-import 'package:maa_tara/staff_list.dart';
+import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/features/customers/add_customer.dart';
+import 'package:maa_tara/features/staff/staff_list.dart';
+import 'package:maa_tara/features/work/create_work.dart';
 
 typedef _C = AppColors;
 
@@ -19,6 +19,39 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  String get _currentFormattedDate {
+    final now = DateTime.now();
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${now.day} ${months[now.month - 1]} ${now.year}';
+  }
+
+  String get _currentFormattedWeekday {
+    final now = DateTime.now();
+    const weekdays = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+    return weekdays[now.weekday - 1];
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -77,7 +110,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   color: _C.card,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: Color(0xFFE8A020).withOpacity(0.4),
+                    color: const Color(0xFFE8A020).withValues(alpha: 0.4),
                     width: 1,
                   ),
                 ),
@@ -91,18 +124,18 @@ class _DashboardPageState extends State<DashboardPage> {
                     const SizedBox(width: 6),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
-                          '23 May 2025',
-                          style: TextStyle(
+                          _currentFormattedDate,
+                          style: const TextStyle(
                             color: _C.white,
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         Text(
-                          'Friday',
-                          style: TextStyle(color: _C.muted, fontSize: 10),
+                          _currentFormattedWeekday,
+                          style: const TextStyle(color: _C.muted, fontSize: 10),
                         ),
                       ],
                     ),
@@ -275,7 +308,7 @@ class _DashboardPageState extends State<DashboardPage> {
           boxShadow: s.bgColor == Colors.white
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withValues(alpha: 0.08),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -342,7 +375,7 @@ class _DashboardPageState extends State<DashboardPage> {
           Container(
             padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
-              color: const Color(0xFFE8A020).withOpacity(0.15),
+              color: const Color(0xFFE8A020).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const SizedBox(
@@ -399,8 +432,8 @@ class _DashboardPageState extends State<DashboardPage> {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: actions.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 10),
-            itemBuilder: (_, i) => _buildActionCard(actions[i]),
+            separatorBuilder: (context, index) => const SizedBox(width: 10),
+            itemBuilder: (context, i) => _buildActionCard(actions[i]),
           ),
         ),
       ],
@@ -534,9 +567,9 @@ class _DashboardPageState extends State<DashboardPage> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: activities.length,
-            separatorBuilder: (_, __) =>
+            separatorBuilder: (context, index) =>
                 const Divider(color: _C.divider, height: 1, thickness: 1),
-            itemBuilder: (_, i) => _buildActivityTile(activities[i]),
+            itemBuilder: (context, i) => _buildActivityTile(activities[i]),
           ),
         ),
       ],
@@ -552,7 +585,7 @@ class _DashboardPageState extends State<DashboardPage> {
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              color: a.color.withOpacity(0.15),
+              color: a.color.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(a.icon, color: a.color, size: 16),
@@ -824,9 +857,9 @@ class _DashboardPageState extends State<DashboardPage> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: staff.length,
-                separatorBuilder: (_, __) =>
+                separatorBuilder: (context, index) =>
                     const Divider(color: _C.divider, height: 1),
-                itemBuilder: (_, i) => _buildStaffTile(staff[i]),
+                itemBuilder: (context, i) => _buildStaffTile(staff[i]),
               ),
             ],
           ),
@@ -843,7 +876,7 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           CircleAvatar(
             radius: 16,
-            backgroundColor: Color(0xFFE8A020).withOpacity(0.2),
+            backgroundColor: const Color(0xFFE8A020).withValues(alpha: 0.2),
             child: Text(
               s.initials,
               style: const TextStyle(

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:maa_tara/add_staff.dart';
-import 'package:maa_tara/colors.dart';
-import 'package:maa_tara/create_work.dart';
-import 'package:maa_tara/staff_attendance_log.dart';
-import 'package:maa_tara/staff_list.dart';
-import 'package:maa_tara/staff_work_history.dart';
+import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/features/staff/add_staff.dart';
+import 'package:maa_tara/features/staff/staff_attendance_log.dart';
+import 'package:maa_tara/features/staff/staff_list.dart';
+import 'package:maa_tara/features/staff/staff_work_history.dart';
+import 'package:maa_tara/features/work/create_work.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Staff Details Page
@@ -179,7 +179,7 @@ class _StaffDetailsPageState extends State<StaffDetailsPage> {
               width: 56,
               height: 56,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
+              errorBuilder: (context, error, stackTrace) => Container(
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:maa_tara/add_customer.dart';
-import 'package:maa_tara/colors.dart';
-import 'package:maa_tara/create_work.dart';
-import 'package:maa_tara/customer_details.dart';
+import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/features/customers/add_customer.dart';
+import 'package:maa_tara/features/customers/customer_details.dart';
+import 'package:maa_tara/features/work/create_work.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Customer Model & Work History Model
@@ -452,7 +452,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: customers.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  separatorBuilder: (context, index) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     return _buildCustomerCard(customers[index]);
                   },

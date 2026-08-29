@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:maa_tara/colors.dart';
-import 'package:maa_tara/staff_list.dart';
+import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/features/staff/staff_list.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Attendance Record Model
@@ -40,8 +40,8 @@ class StaffAttendanceLogPage extends StatefulWidget {
 }
 
 class _StaffAttendanceLogPageState extends State<StaffAttendanceLogPage> {
-  int _selectedMonthIndex = 4; // May
-  int _selectedYear = 2025;
+  late int _selectedMonthIndex;
+  late int _selectedYear;
   String _selectedFilter = 'All';
 
   final List<String> _months = [
@@ -64,6 +64,8 @@ class _StaffAttendanceLogPageState extends State<StaffAttendanceLogPage> {
   @override
   void initState() {
     super.initState();
+    _selectedMonthIndex = DateTime.now().month - 1;
+    _selectedYear = DateTime.now().year;
     _loadMonthRecords();
   }
 
@@ -257,7 +259,7 @@ class _StaffAttendanceLogPageState extends State<StaffAttendanceLogPage> {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: records.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        separatorBuilder: (context, index) => const SizedBox(height: 10),
                         itemBuilder: (context, index) {
                           return _buildAttendanceDayCard(records[index]);
                         },
@@ -445,7 +447,7 @@ class _StaffAttendanceLogPageState extends State<StaffAttendanceLogPage> {
               width: 40,
               height: 40,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
+              errorBuilder: (context, error, stackTrace) => Container(
                 width: 40,
                 height: 40,
                 color: AppColors.inputFill,

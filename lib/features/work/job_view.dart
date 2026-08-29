@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:maa_tara/colors.dart';
-import 'package:maa_tara/job.dart';
+import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/features/work/job.dart';
 
 typedef _C = AppColors;
 
@@ -163,7 +163,7 @@ class _WorkViewPageState extends State<WorkViewPage> {
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: _C.muted.withOpacity(0.4),
+              color: _C.muted.withValues(alpha: 0.4),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -286,9 +286,9 @@ class _WorkViewPageState extends State<WorkViewPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: statusColor.withOpacity(0.2),
+          color: statusColor.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: statusColor.withOpacity(0.5)),
+          border: Border.all(color: statusColor.withValues(alpha: 0.5)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -373,7 +373,7 @@ class _WorkViewPageState extends State<WorkViewPage> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: _C.card,
-              border: Border.all(color: _C.accent.withOpacity(0.4), width: 1.2),
+              border: Border.all(color: _C.accent.withValues(alpha: 0.4), width: 1.2),
             ),
             alignment: Alignment.center,
             child: iconWidget,
@@ -632,7 +632,7 @@ class _WorkViewPageState extends State<WorkViewPage> {
                 child: Image.network(
                   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) =>
+                  errorBuilder: (context, error, stackTrace) =>
                       const Icon(Icons.person, color: _C.muted, size: 22),
                 ),
               ),
@@ -772,7 +772,7 @@ class _WorkViewPageState extends State<WorkViewPage> {
               _currentStatus == WorkStatus.inProgress ||
                   _currentStatus == WorkStatus.completed
               ? _C.blue
-              : _C.muted.withOpacity(0.4),
+              : _C.muted.withValues(alpha: 0.4),
           title: 'Work Started',
           subtitle: 'By Vikram Singh',
           dateTime: '23 May 2025, 09:35 AM',
@@ -780,7 +780,7 @@ class _WorkViewPageState extends State<WorkViewPage> {
         _timelineItem(
           dotColor: _currentStatus == WorkStatus.onHold
               ? _C.amber
-              : _C.muted.withOpacity(0.4),
+              : _C.muted.withValues(alpha: 0.4),
           title: 'On Hold',
           subtitle: _currentStatus == WorkStatus.onHold
               ? 'Waiting for parts'
@@ -792,7 +792,7 @@ class _WorkViewPageState extends State<WorkViewPage> {
         _timelineItem(
           dotColor: _currentStatus == WorkStatus.completed
               ? _C.green
-              : _C.muted.withOpacity(0.4),
+              : _C.muted.withValues(alpha: 0.4),
           title: 'Work Completed',
           subtitle: _currentStatus == WorkStatus.completed
               ? 'Quality check passed'
@@ -936,7 +936,7 @@ class _WorkViewPageState extends State<WorkViewPage> {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: photos.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            separatorBuilder: (context, index) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
               final isLast = index == photos.length - 1;
               return ClipRRect(
@@ -951,7 +951,7 @@ class _WorkViewPageState extends State<WorkViewPage> {
                       _buildPhotoThumbnail(photos[index]),
                       if (isLast && photos.length >= 5)
                         Container(
-                          color: Colors.black.withOpacity(0.65),
+                          color: Colors.black.withValues(alpha: 0.65),
                           alignment: Alignment.center,
                           child: const Text(
                             '+2',
@@ -978,7 +978,7 @@ class _WorkViewPageState extends State<WorkViewPage> {
       return Image.network(
         photoPath,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => const Center(
+        errorBuilder: (context, error, stackTrace) => const Center(
           child: Icon(Icons.car_repair, color: _C.muted, size: 24),
         ),
       );
@@ -986,7 +986,7 @@ class _WorkViewPageState extends State<WorkViewPage> {
       return Image.file(
         File(photoPath),
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => const Center(
+        errorBuilder: (context, error, stackTrace) => const Center(
           child: Icon(Icons.car_repair, color: _C.muted, size: 24),
         ),
       );
@@ -1409,7 +1409,7 @@ class _WorkViewPageState extends State<WorkViewPage> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: _C.accent.withOpacity(0.15),
+                        color: _C.accent.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(
@@ -1446,7 +1446,7 @@ class _WorkViewPageState extends State<WorkViewPage> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: _C.blue.withOpacity(0.15),
+                        color: _C.blue.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(
@@ -1658,10 +1658,10 @@ class _WorkViewPageState extends State<WorkViewPage> {
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: iconColor.withOpacity(0.15),
+                    color: iconColor.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: iconColor.withOpacity(0.4),
+                      color: iconColor.withValues(alpha: 0.4),
                       width: 1.5,
                     ),
                   ),

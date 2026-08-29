@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:maa_tara/colors.dart';
+import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/features/staff/staff_list.dart';
 import 'package:maa_tara/main.dart';
-import 'package:maa_tara/staff_list.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Login Page (Unified Admin & Staff Authentication)
@@ -712,10 +712,14 @@ class _LoginPageState extends State<LoginPage> {
         ? 'Administrator'
         : (matchedStaff?.role ?? 'Technician');
 
+    AuthSession.currentUserRole = isAdmin ? 'admin' : 'staff';
+    AuthSession.currentStaff = matchedStaff;
+
     _showLoginSuccessDialog(
       userName: userName,
       userRole: userRole,
       isAdmin: isAdmin,
+      matchedStaff: matchedStaff,
     );
   }
 
@@ -737,6 +741,7 @@ class _LoginPageState extends State<LoginPage> {
     required String userName,
     required String userRole,
     required bool isAdmin,
+    StaffModel? matchedStaff,
   }) {
     showDialog(
       context: context,
@@ -817,11 +822,14 @@ class _LoginPageState extends State<LoginPage> {
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pop(context);
-                      // Navigate to HomePage
+                      // Navigate to HomePage with user session
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const HomePage(),
+                          builder: (context) => HomePage(
+                            userRole: isAdmin ? 'admin' : 'staff',
+                            staff: matchedStaff,
+                          ),
                         ),
                       );
                     },

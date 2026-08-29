@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:maa_tara/colors.dart';
-import 'package:maa_tara/create_work.dart';
-import 'package:maa_tara/customer_list.dart';
+import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/features/customers/customer_list.dart';
+import 'package:maa_tara/features/work/create_work.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Add Customer Page

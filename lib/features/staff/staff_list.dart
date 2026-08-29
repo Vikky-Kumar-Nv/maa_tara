@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:maa_tara/add_staff.dart';
-import 'package:maa_tara/colors.dart';
-import 'package:maa_tara/create_work.dart';
-import 'package:maa_tara/staff_details.dart';
+import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/features/staff/add_staff.dart';
+import 'package:maa_tara/features/staff/staff_details.dart';
+import 'package:maa_tara/features/work/create_work.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Staff Model
@@ -393,7 +393,7 @@ class _StaffListPageState extends State<StaffListPage> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: _filterTabs.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (context, index) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 final tab = _filterTabs[index];
                 final isSelected = _selectedFilter == tab;
@@ -438,7 +438,7 @@ class _StaffListPageState extends State<StaffListPage> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: staffList.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 return _buildStaffCard(staffList[index]);
               },
@@ -474,7 +474,7 @@ class _StaffListPageState extends State<StaffListPage> {
                   width: 48,
                   height: 48,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+                  errorBuilder: (context, error, stackTrace) => Container(
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(

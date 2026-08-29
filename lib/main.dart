@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:maa_tara/appbar.dart';
-import 'package:maa_tara/bottom_tabbar.dart';
-import 'package:maa_tara/colors.dart';
-import 'package:maa_tara/dashboard.dart';
-import 'package:maa_tara/job.dart';
-import 'package:maa_tara/login.dart';
-import 'package:maa_tara/more.dart';
-import 'package:maa_tara/staff_list.dart';
+import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/core/widgets/appbar.dart';
+import 'package:maa_tara/core/widgets/bottom_tabbar.dart';
+import 'package:maa_tara/features/auth/login.dart';
+import 'package:maa_tara/features/dashboard/dashboard.dart';
+import 'package:maa_tara/features/dashboard/staff_dashboard.dart';
+import 'package:maa_tara/features/more/more.dart';
+import 'package:maa_tara/features/staff/staff_list.dart';
+import 'package:maa_tara/features/work/job.dart';
 
 void main() {
   runApp(const MyApp());
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Global Auth Session
+// ─────────────────────────────────────────────────────────────────────────────
+class AuthSession {
+  static String currentUserRole = 'admin'; // 'admin' or 'staff'
+  static StaffModel? currentStaff;
 }
 
 class MyApp extends StatelessWidget {
@@ -35,7 +44,10 @@ class MyApp extends StatelessWidget {
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final String? userRole;
+  final StaffModel? staff;
+
+  const HomePage({super.key, this.userRole, this.staff});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -52,6 +64,17 @@ class _HomePageState extends State<HomePage> {
     'More',
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.userRole != null) {
+      AuthSession.currentUserRole = widget.userRole!;
+    }
+    if (widget.staff != null) {
+      AuthSession.currentStaff = widget.staff;
+    }
+  }
+
   void _onTabTapped(int index) {
     setState(() {
       _currentIndex = index;
@@ -61,7 +84,12 @@ class _HomePageState extends State<HomePage> {
   Widget _currentPage() {
     switch (_currentIndex) {
       case 0:
-        return const DashboardPage();
+        return AuthSession.currentUserRole == 'staff'
+            ? StaffDashboardPage(
+                staff: AuthSession.currentStaff,
+                onNavigateTab: _onTabTapped,
+              )
+            : const DashboardPage();
       case 1:
         return const JobPage();
       case 3:
