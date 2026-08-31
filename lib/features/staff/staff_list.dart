@@ -57,6 +57,50 @@ class StaffModel {
     if (parts.length == 1) return parts[0][0].toUpperCase();
     return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
   }
+
+  StaffModel copyWith({
+    String? id,
+    String? name,
+    String? role,
+    String? phone,
+    String? email,
+    String? avatarUrl,
+    String? status,
+    String? activityStatus,
+    int? todayWorks,
+    int? completedWorks,
+    int? pendingWorks,
+    String? currentWork,
+    String? currentWorkId,
+    String? currentCustomer,
+    String? currentVehicle,
+    String? attendance,
+    String? checkInTime,
+    String? checkOutTime,
+    String? joiningDate,
+  }) {
+    return StaffModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      role: role ?? this.role,
+      phone: phone ?? this.phone,
+      email: email ?? this.email,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      status: status ?? this.status,
+      activityStatus: activityStatus ?? this.activityStatus,
+      todayWorks: todayWorks ?? this.todayWorks,
+      completedWorks: completedWorks ?? this.completedWorks,
+      pendingWorks: pendingWorks ?? this.pendingWorks,
+      currentWork: currentWork ?? this.currentWork,
+      currentWorkId: currentWorkId ?? this.currentWorkId,
+      currentCustomer: currentCustomer ?? this.currentCustomer,
+      currentVehicle: currentVehicle ?? this.currentVehicle,
+      attendance: attendance ?? this.attendance,
+      checkInTime: checkInTime ?? this.checkInTime,
+      checkOutTime: checkOutTime ?? this.checkOutTime,
+      joiningDate: joiningDate ?? this.joiningDate,
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -70,8 +114,7 @@ class StaffRepository {
       role: 'Technician',
       phone: '9876549870',
       email: 'vikram.singh@maara.com',
-      avatarUrl:
-          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       status: 'Active',
       activityStatus: 'Working',
       todayWorks: 4,
@@ -91,8 +134,7 @@ class StaffRepository {
       role: 'Mechanic',
       phone: '9876512345',
       email: 'arjun.mehta@maara.com',
-      avatarUrl:
-          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
       status: 'Active',
       activityStatus: 'Working',
       todayWorks: 3,
@@ -112,8 +154,7 @@ class StaffRepository {
       role: 'Technician',
       phone: '9876533221',
       email: 'rohit.kumar@maara.com',
-      avatarUrl:
-          'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+      avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
       status: 'Active',
       activityStatus: 'Offline',
       todayWorks: 0,
@@ -133,8 +174,7 @@ class StaffRepository {
       role: 'Electrician',
       phone: '9876567788',
       email: 'suresh.patel@maara.com',
-      avatarUrl:
-          'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
+      avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
       status: 'On Leave',
       activityStatus: 'Leave',
       todayWorks: 0,
@@ -154,8 +194,7 @@ class StaffRepository {
       role: 'Helper',
       phone: '9876589123',
       email: 'neeraj.yadav@maara.com',
-      avatarUrl:
-          'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80',
+      avatarUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80',
       status: 'Suspended',
       activityStatus: 'Offline',
       todayWorks: 0,
@@ -221,7 +260,8 @@ class _StaffListPageState extends State<StaffListPage> {
       } else if (_selectedFilter == 'Offline') {
         matchesTab = staff.activityStatus == 'Offline';
       } else if (_selectedFilter == 'Leave') {
-        matchesTab = staff.status == 'On Leave' || staff.activityStatus == 'Leave';
+        matchesTab =
+            staff.status == 'On Leave' || staff.activityStatus == 'Leave';
       } else if (_selectedFilter == 'Suspended') {
         matchesTab = staff.status == 'Suspended';
       }
@@ -230,7 +270,8 @@ class _StaffListPageState extends State<StaffListPage> {
       bool matchesSearch = true;
       if (_searchQuery.isNotEmpty) {
         final q = _searchQuery.toLowerCase();
-        matchesSearch = staff.name.toLowerCase().contains(q) ||
+        matchesSearch =
+            staff.name.toLowerCase().contains(q) ||
             staff.phone.toLowerCase().contains(q) ||
             staff.role.toLowerCase().contains(q);
       }
@@ -324,7 +365,10 @@ class _StaffListPageState extends State<StaffListPage> {
                   ),
                   child: TextField(
                     controller: _searchController,
-                    style: const TextStyle(color: AppColors.white, fontSize: 13),
+                    style: const TextStyle(
+                      color: AppColors.white,
+                      fontSize: 13,
+                    ),
                     cursorColor: AppColors.accent,
                     decoration: InputDecoration(
                       hintText: 'Search staff by name, phone or role...',
@@ -410,7 +454,9 @@ class _StaffListPageState extends State<StaffListPage> {
                           : AppColors.card,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: isSelected ? AppColors.accent : AppColors.divider,
+                        color: isSelected
+                            ? AppColors.accent
+                            : AppColors.divider,
                         width: 1,
                       ),
                     ),
@@ -419,8 +465,9 @@ class _StaffListPageState extends State<StaffListPage> {
                       style: TextStyle(
                         color: isSelected ? AppColors.accent : AppColors.muted,
                         fontSize: 12,
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                       ),
                     ),
                   ),
@@ -456,7 +503,12 @@ class _StaffListPageState extends State<StaffListPage> {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.divider, width: 1),
+        border: Border.all(
+          color: s.status == 'Suspended'
+              ? AppColors.red.withValues(alpha: 0.4)
+              : AppColors.divider,
+          width: 1,
+        ),
       ),
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -464,7 +516,7 @@ class _StaffListPageState extends State<StaffListPage> {
         children: [
           // ── Top Row: Avatar, Info, Status & Activity Badges ────────────────
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Avatar Image
               ClipRRect(
@@ -528,7 +580,11 @@ class _StaffListPageState extends State<StaffListPage> {
                           ),
                         ),
                         const SizedBox(width: 4),
-                        const Icon(Icons.phone, color: AppColors.accent, size: 11),
+                        const Icon(
+                          Icons.phone,
+                          color: AppColors.accent,
+                          size: 11,
+                        ),
                       ],
                     ),
                   ],
@@ -558,9 +614,21 @@ class _StaffListPageState extends State<StaffListPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildStatColumn("Today's Works", '${s.todayWorks}', AppColors.blue),
-                _buildStatColumn('Completed', '${s.completedWorks}', AppColors.green),
-                _buildStatColumn('Current Work', s.currentWork, AppColors.white),
+                _buildStatColumn(
+                  "Today's Works",
+                  '${s.todayWorks}',
+                  AppColors.blue,
+                ),
+                _buildStatColumn(
+                  'Completed',
+                  '${s.completedWorks}',
+                  AppColors.green,
+                ),
+                _buildStatColumn(
+                  'Current Work',
+                  s.currentWork,
+                  AppColors.white,
+                ),
                 _buildAttendanceColumn(s.attendance),
               ],
             ),
@@ -708,10 +776,7 @@ class _StaffListPageState extends State<StaffListPage> {
         Container(
           width: 6,
           height: 6,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: dotColor,
-          ),
+          decoration: BoxDecoration(shape: BoxShape.circle, color: dotColor),
         ),
         const SizedBox(width: 4),
         Text(
@@ -823,25 +888,35 @@ class _StaffListPageState extends State<StaffListPage> {
     }
   }
 
-  void _openStaffDetails(StaffModel s) {
-    Navigator.push(
+  void _openStaffDetails(StaffModel s) async {
+    await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => StaffDetailsPage(staff: s),
-      ),
+      MaterialPageRoute(builder: (context) => StaffDetailsPage(staff: s)),
     );
+    setState(() {});
   }
 
   void _assignWorkToStaff(StaffModel s) {
+    if (s.status == 'Suspended') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${s.name} is currently suspended and cannot be assigned work.',
+          ),
+          backgroundColor: AppColors.red,
+        ),
+      );
+      return;
+    }
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const CreateWorkPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const CreateWorkPage()),
     );
   }
 
   void _showStaffQuickMenu(StaffModel s) {
+    final isSuspended = s.status == 'Suspended';
+
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.card,
@@ -856,35 +931,211 @@ class _StaffListPageState extends State<StaffListPage> {
             children: [
               ListTile(
                 leading: const Icon(Icons.phone, color: AppColors.accent),
-                title: Text('Call ${s.name}', style: const TextStyle(color: AppColors.white)),
+                title: Text(
+                  'Call ${s.name}',
+                  style: const TextStyle(color: AppColors.white),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Calling ${s.phone}...'), backgroundColor: AppColors.card),
+                    SnackBar(
+                      content: Text('Calling ${s.phone}...'),
+                      backgroundColor: AppColors.card,
+                    ),
                   );
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.chat, color: AppColors.accent),
-                title: Text('WhatsApp ${s.name}', style: const TextStyle(color: AppColors.white)),
+                title: Text(
+                  'WhatsApp ${s.name}',
+                  style: const TextStyle(color: AppColors.white),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Opening WhatsApp for ${s.phone}...'), backgroundColor: AppColors.card),
+                    SnackBar(
+                      content: Text('Opening WhatsApp for ${s.phone}...'),
+                      backgroundColor: AppColors.card,
+                    ),
                   );
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.block, color: AppColors.red),
-                title: const Text('Suspend Staff', style: TextStyle(color: AppColors.red)),
+                leading: Icon(
+                  isSuspended ? Icons.lock_open_rounded : Icons.block,
+                  color: isSuspended ? AppColors.green : AppColors.red,
+                ),
+                title: Text(
+                  isSuspended
+                      ? 'Unsuspend / Reactivate Staff'
+                      : 'Suspend Staff',
+                  style: TextStyle(
+                    color: isSuspended ? AppColors.green : AppColors.red,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 onTap: () {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('${s.name} marked as suspended'), backgroundColor: AppColors.card),
-                  );
+                  _confirmToggleSuspension(s, !isSuspended);
                 },
               ),
             ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _confirmToggleSuspension(StaffModel s, bool suspend) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.card,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: AppColors.divider),
+        ),
+        title: Row(
+          children: [
+            Icon(
+              suspend ? Icons.block : Icons.lock_open_rounded,
+              color: suspend ? AppColors.red : AppColors.green,
+              size: 22,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              suspend ? 'Suspend Staff' : 'Reactivate Staff',
+              style: const TextStyle(color: AppColors.white),
+            ),
+          ],
+        ),
+        content: Text(
+          suspend
+              ? 'Are you sure you want to suspend ${s.name}? They will be marked as inactive and blocked from job assignments.'
+              : 'Do you want to remove the suspension for ${s.name} and restore their Active status?',
+          style: const TextStyle(color: AppColors.muted, fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.muted),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              final updated = s.copyWith(
+                status: suspend ? 'Suspended' : 'Active',
+                activityStatus: suspend ? 'Offline' : 'Working',
+              );
+              StaffRepository.updateStaff(updated);
+              setState(() {});
+              _showStatusDialog(
+                title: suspend ? 'Staff Suspended!' : 'Staff Reactivated!',
+                message: suspend
+                    ? '${s.name} has been suspended from duty and work allocation.'
+                    : '${s.name} has been successfully reactivated and restored to Active status.',
+                icon: suspend ? Icons.block : Icons.check_circle_rounded,
+                iconColor: suspend ? AppColors.red : AppColors.green,
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: suspend ? AppColors.red : AppColors.green,
+            ),
+            child: Text(
+              suspend ? 'Suspend' : 'Reactivate',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showStatusDialog({
+    required String title,
+    required String message,
+    required IconData icon,
+    required Color iconColor,
+  }) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: AppColors.card,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: AppColors.divider, width: 1),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: iconColor.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: iconColor.withValues(alpha: 0.4),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 36),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 13,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: iconColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Text(
+                      'OK',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -916,19 +1167,33 @@ class _StaffListPageState extends State<StaffListPage> {
               const SizedBox(height: 12),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.sort_by_alpha, color: AppColors.accent),
-                title: const Text('Sort A to Z', style: TextStyle(color: AppColors.white)),
+                leading: const Icon(
+                  Icons.sort_by_alpha,
+                  color: AppColors.accent,
+                ),
+                title: const Text(
+                  'Sort A to Z',
+                  style: TextStyle(color: AppColors.white),
+                ),
                 onTap: () {
                   setState(() {
-                    StaffRepository.staffList.sort((a, b) => a.name.compareTo(b.name));
+                    StaffRepository.staffList.sort(
+                      (a, b) => a.name.compareTo(b.name),
+                    );
                   });
                   Navigator.pop(context);
                 },
               ),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.check_circle_outline, color: AppColors.accent),
-                title: const Text('Only Active Technicians', style: TextStyle(color: AppColors.white)),
+                leading: const Icon(
+                  Icons.check_circle_outline,
+                  color: AppColors.accent,
+                ),
+                title: const Text(
+                  'Only Active Technicians',
+                  style: TextStyle(color: AppColors.white),
+                ),
                 onTap: () {
                   setState(() => _selectedFilter = 'Active');
                   Navigator.pop(context);
