@@ -50,13 +50,32 @@ class _StaffWorkHistoryPageState extends State<StaffWorkHistoryPage> {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
-  late List<StaffWorkItem> _historyList;
+  List<StaffWorkItem> get _historyList {
+    // 1. Live works from WorkRepository for this staff
+    final clean = widget.staff.name.trim().toLowerCase();
+    final liveWorks = WorkRepository.works.where((w) {
+      final assigned = w.assignedStaff.trim().toLowerCase();
+      return assigned == clean ||
+          assigned.contains(clean) ||
+          clean.contains(assigned);
+    }).map((w) {
+      return StaffWorkItem(
+        workId: w.workId,
+        customerName: w.customerName,
+        phone: w.phone,
+        vehiclePlate: w.vehiclePlate,
+        carModel: w.carModel,
+        service: w.service ?? w.carModel,
+        date: '${w.date}, ${w.time}',
+        duration: w.status == WorkStatus.inProgress
+            ? 'In Progress'
+            : (w.status == WorkStatus.completed ? 'Completed' : 'Pending'),
+        status: w.status,
+      );
+    }).toList();
 
-  @override
-  void initState() {
-    super.initState();
-    // Dynamic sample work history tailored for this staff member
-    _historyList = [
+    // 2. Sample fallback work history for demonstration
+    final seedHistory = [
       StaffWorkItem(
         workId: widget.staff.currentWorkId,
         customerName: widget.staff.currentCustomer,
@@ -123,6 +142,12 @@ class _StaffWorkHistoryPageState extends State<StaffWorkHistoryPage> {
         duration: '1h 15m',
         status: WorkStatus.completed,
       ),
+    ];
+
+    final existingIds = liveWorks.map((e) => e.workId).toSet();
+    return [
+      ...liveWorks,
+      ...seedHistory.where((s) => !existingIds.contains(s.workId)),
     ];
   }
 

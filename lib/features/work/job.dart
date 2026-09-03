@@ -1,17 +1,21 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:maa_tara/core/constants/colors.dart';
 import 'package:maa_tara/core/widgets/paginated_list.dart';
 import 'package:maa_tara/core/widgets/skeleton_loader.dart';
+import 'package:maa_tara/features/staff/staff_list.dart';
 import 'package:maa_tara/features/work/create_work.dart';
 import 'package:maa_tara/features/work/job_view.dart';
+import 'package:maa_tara/features/work/work_status.dart';
+
+export 'package:maa_tara/features/work/work_status.dart';
 
 typedef _C = AppColors;
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Work Model
 // ─────────────────────────────────────────────────────────────────────────────
-enum WorkStatus { inProgress, pending, onHold, completed }
-typedef JobStatus = WorkStatus;
 
 class WorkModel {
   final String workId;
@@ -44,6 +48,36 @@ class WorkModel {
     required this.carImageUrl,
     required this.staffAvatarUrl,
   });
+
+  WorkModel copyWith({
+    String? workId,
+    String? customerName,
+    String? phone,
+    String? vehiclePlate,
+    String? carModel,
+    String? service,
+    String? assignedStaff,
+    String? date,
+    String? time,
+    WorkStatus? status,
+    String? carImageUrl,
+    String? staffAvatarUrl,
+  }) {
+    return WorkModel(
+      workId: workId ?? this.workId,
+      customerName: customerName ?? this.customerName,
+      phone: phone ?? this.phone,
+      vehiclePlate: vehiclePlate ?? this.vehiclePlate,
+      carModel: carModel ?? this.carModel,
+      service: service ?? this.service,
+      assignedStaff: assignedStaff ?? this.assignedStaff,
+      date: date ?? this.date,
+      time: time ?? this.time,
+      status: status ?? this.status,
+      carImageUrl: carImageUrl ?? this.carImageUrl,
+      staffAvatarUrl: staffAvatarUrl ?? this.staffAvatarUrl,
+    );
+  }
 }
 
 typedef JobModel = WorkModel;
@@ -64,10 +98,8 @@ class WorkRepository {
       date: '23 May 2025',
       time: '09:15 AM',
       status: WorkStatus.inProgress,
-      carImageUrl:
-          'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=300&auto=format&fit=crop&q=80',
-      staffAvatarUrl:
-          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+      carImageUrl: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=300&auto=format&fit=crop&q=80',
+      staffAvatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
     ),
     WorkModel(
       workId: 'WORK-1057',
@@ -80,10 +112,8 @@ class WorkRepository {
       date: '23 May 2025',
       time: '10:30 AM',
       status: WorkStatus.pending,
-      carImageUrl:
-          'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=300&auto=format&fit=crop&q=80',
-      staffAvatarUrl:
-          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
+      carImageUrl: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=300&auto=format&fit=crop&q=80',
+      staffAvatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
     ),
     WorkModel(
       workId: 'WORK-1056',
@@ -96,10 +126,8 @@ class WorkRepository {
       date: '23 May 2025',
       time: '11:00 AM',
       status: WorkStatus.inProgress,
-      carImageUrl:
-          'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=300&auto=format&fit=crop&q=80',
-      staffAvatarUrl:
-          'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
+      carImageUrl: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=300&auto=format&fit=crop&q=80',
+      staffAvatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
     ),
     WorkModel(
       workId: 'WORK-1055',
@@ -112,10 +140,8 @@ class WorkRepository {
       date: '22 May 2025',
       time: '04:45 PM',
       status: WorkStatus.onHold,
-      carImageUrl:
-          'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=300&auto=format&fit=crop&q=80',
-      staffAvatarUrl:
-          'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80',
+      carImageUrl: 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=300&auto=format&fit=crop&q=80',
+      staffAvatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80',
     ),
     WorkModel(
       workId: 'WORK-1054',
@@ -128,17 +154,104 @@ class WorkRepository {
       date: '22 May 2025',
       time: '02:15 PM',
       status: WorkStatus.completed,
-      carImageUrl:
-          'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=300&auto=format&fit=crop&q=80',
-      staffAvatarUrl:
-          'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&auto=format&fit=crop&q=80',
+      carImageUrl: 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=300&auto=format&fit=crop&q=80',
+      staffAvatarUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&auto=format&fit=crop&q=80',
     ),
   ];
 
   static List<WorkModel> get works => _works;
 
+  /// Adds a new work card and dynamically links it to the assigned staff
   static void addWork(WorkModel work) {
     _works.insert(0, work);
+    StaffRepository.assignWorkToStaff(
+      staffName: work.assignedStaff,
+      workId: work.workId,
+      workTitle: work.service ?? work.carModel,
+      customerName: work.customerName,
+      vehiclePlate: work.vehiclePlate,
+    );
+  }
+
+  /// Updates status of a work card and syncs staff performance metrics
+  static void updateWorkStatus(String workId, WorkStatus newStatus) {
+    final idx = _works.indexWhere((w) => w.workId == workId);
+    if (idx != -1) {
+      final current = _works[idx];
+      _works[idx] = current.copyWith(status: newStatus);
+
+      if (newStatus == WorkStatus.completed) {
+        StaffRepository.completeWorkForStaff(
+          staffName: current.assignedStaff,
+          workId: workId,
+        );
+      }
+    }
+  }
+
+  /// Reassigns a work card from one staff to another dynamically
+  static void reassignStaff(
+    String workId,
+    String newStaffName,
+    String newStaffAvatar,
+  ) {
+    final idx = _works.indexWhere((w) => w.workId == workId);
+    if (idx != -1) {
+      final current = _works[idx];
+      final oldStaffName = current.assignedStaff;
+      _works[idx] = current.copyWith(
+        assignedStaff: newStaffName,
+        staffAvatarUrl: newStaffAvatar,
+      );
+
+      StaffRepository.reassignWorkFromStaff(
+        oldStaffName: oldStaffName,
+        newStaffName: newStaffName,
+        workId: workId,
+        workTitle: current.service ?? current.carModel,
+        customerName: current.customerName,
+        vehiclePlate: current.vehiclePlate,
+      );
+    }
+  }
+
+  /// Updates an entire existing work card and syncs with StaffRepository
+  static void updateWork(WorkModel updatedWork) {
+    final idx = _works.indexWhere((w) => w.workId == updatedWork.workId);
+    if (idx != -1) {
+      final old = _works[idx];
+      _works[idx] = updatedWork;
+
+      // If staff changed on edit
+      if (old.assignedStaff.trim().toLowerCase() !=
+          updatedWork.assignedStaff.trim().toLowerCase()) {
+        StaffRepository.reassignWorkFromStaff(
+          oldStaffName: old.assignedStaff,
+          newStaffName: updatedWork.assignedStaff,
+          workId: updatedWork.workId,
+          workTitle: updatedWork.service ?? updatedWork.carModel,
+          customerName: updatedWork.customerName,
+          vehiclePlate: updatedWork.vehiclePlate,
+        );
+      } else {
+        // Sync updated service / details with current staff
+        StaffRepository.assignWorkToStaff(
+          staffName: updatedWork.assignedStaff,
+          workId: updatedWork.workId,
+          workTitle: updatedWork.service ?? updatedWork.carModel,
+          customerName: updatedWork.customerName,
+          vehiclePlate: updatedWork.vehiclePlate,
+        );
+      }
+
+      if (updatedWork.status == WorkStatus.completed &&
+          old.status != WorkStatus.completed) {
+        StaffRepository.completeWorkForStaff(
+          staffName: updatedWork.assignedStaff,
+          workId: updatedWork.workId,
+        );
+      }
+    }
   }
 }
 
@@ -546,17 +659,32 @@ class _WorkPageState extends State<WorkPage> {
                   width: 72,
                   height: 58,
                   color: const Color(0xFF0F1B2B),
-                  child: Image.network(
-                    work.carImageUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Center(
-                      child: Icon(
-                        Icons.directions_car,
-                        color: _C.muted,
-                        size: 30,
-                      ),
-                    ),
-                  ),
+                  child: work.carImageUrl.startsWith('http://') ||
+                          work.carImageUrl.startsWith('https://')
+                      ? Image.network(
+                          work.carImageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Center(
+                            child: Icon(
+                              Icons.directions_car,
+                              color: _C.muted,
+                              size: 30,
+                            ),
+                          ),
+                        )
+                      : Image.file(
+                          File(work.carImageUrl),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Center(
+                            child: Icon(
+                              Icons.directions_car,
+                              color: _C.muted,
+                              size: 30,
+                            ),
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -721,6 +849,14 @@ class _WorkPageState extends State<WorkPage> {
               Container(width: 1, height: 16, color: _C.divider),
               Expanded(
                 child: _cardActionButton(
+                  icon: Icons.edit_outlined,
+                  label: 'Edit',
+                  onTap: () => _editWork(work),
+                ),
+              ),
+              Container(width: 1, height: 16, color: _C.divider),
+              Expanded(
+                child: _cardActionButton(
                   icon: Icons.person_add_alt_outlined,
                   label: 'Assign',
                   onTap: () => _assignWork(work),
@@ -730,7 +866,7 @@ class _WorkPageState extends State<WorkPage> {
               Expanded(
                 child: _cardActionButton(
                   icon: Icons.sync,
-                  label: 'Change Status',
+                  label: 'Status',
                   onTap: () => _changeWorkStatus(work),
                 ),
               ),
@@ -743,44 +879,7 @@ class _WorkPageState extends State<WorkPage> {
 
   // ── Status Badge ────────────────────────────────────────────────────────────
   Widget _statusBadge(WorkStatus status) {
-    Color color;
-    String text;
-
-    switch (status) {
-      case WorkStatus.inProgress:
-        color = _C.blue;
-        text = 'In Progress';
-        break;
-      case WorkStatus.pending:
-        color = _C.amber;
-        text = 'Pending';
-        break;
-      case WorkStatus.onHold:
-        color = _C.muted;
-        text = 'On Hold';
-        break;
-      case WorkStatus.completed:
-        color = _C.green;
-        text = 'Completed';
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: color,
-          fontSize: 10.5,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
+    return WorkStatusBadge(status: status);
   }
 
   // ── Card Action Button Helper ───────────────────────────────────────────────
@@ -832,7 +931,11 @@ class _WorkPageState extends State<WorkPage> {
       ),
       child: Column(
         children: [
-          Icon(Icons.search_off, size: 48, color: _C.muted.withValues(alpha: 0.6)),
+          Icon(
+            Icons.search_off,
+            size: 48,
+            color: _C.muted.withValues(alpha: 0.6),
+          ),
           const SizedBox(height: 12),
           const Text(
             'No Work Found',
@@ -983,26 +1086,27 @@ class _WorkPageState extends State<WorkPage> {
     );
   }
 
-  void _viewWorkDetails(WorkModel work) {
-    Navigator.push(
+  void _viewWorkDetails(WorkModel work) async {
+    await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => WorkViewPage(work: work),
-      ),
+      MaterialPageRoute(builder: (context) => WorkViewPage(work: work)),
     );
+    if (mounted) setState(() {});
+  }
+
+  void _editWork(WorkModel work) async {
+    final updated = await Navigator.push<WorkModel>(
+      context,
+      MaterialPageRoute(builder: (context) => CreateWorkPage(workToEdit: work)),
+    );
+    if (updated != null && mounted) {
+      setState(() {});
+    }
   }
 
   void _assignWork(WorkModel work) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Assign staff for ${work.workId}'),
-        backgroundColor: _C.card,
-        duration: const Duration(seconds: 1),
-      ),
-    );
-  }
+    final staffList = StaffRepository.staffList;
 
-  void _changeWorkStatus(WorkModel work) {
     showModalBottomSheet(
       context: context,
       backgroundColor: _C.card,
@@ -1010,42 +1114,80 @@ class _WorkPageState extends State<WorkPage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Update Status for ${work.workId}',
-                style: const TextStyle(
-                  color: _C.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 12),
-              ...WorkStatus.values.map((status) {
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    status.name.toUpperCase(),
-                    style: const TextStyle(color: _C.white),
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Assign Staff (${work.workId})',
+                  style: const TextStyle(
+                    color: _C.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
                   ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Status updated to ${status.name}'),
-                        backgroundColor: _C.card,
+                ),
+                const SizedBox(height: 12),
+                ...staffList.map((staff) {
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.network(
+                        staff.avatarUrl,
+                        width: 32,
+                        height: 32,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) =>
+                            const Icon(Icons.person, color: _C.accent),
                       ),
-                    );
-                  },
-                );
-              }),
-            ],
+                    ),
+                    title: Text(
+                      staff.name,
+                      style: const TextStyle(
+                        color: _C.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${staff.role} • ${staff.todayWorks} tasks today',
+                      style: const TextStyle(color: _C.muted, fontSize: 11),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      WorkRepository.reassignStaff(
+                        work.workId,
+                        staff.name,
+                        staff.avatarUrl,
+                      );
+                      setState(() {});
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Assigned to ${staff.name}'),
+                          backgroundColor: _C.card,
+                        ),
+                      );
+                    },
+                  );
+                }),
+              ],
+            ),
           ),
         );
+      },
+    );
+  }
+
+  void _changeWorkStatus(WorkModel work) {
+    showWorkStatusModalSheet(
+      context: context,
+      workId: work.workId,
+      currentStatus: work.status,
+      onStatusSelected: (newStatus) {
+        WorkRepository.updateWorkStatus(work.workId, newStatus);
+        setState(() {});
       },
     );
   }

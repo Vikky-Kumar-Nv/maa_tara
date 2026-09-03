@@ -224,6 +224,94 @@ class StaffRepository {
       _staffList[index] = staff;
     }
   }
+
+  static StaffModel? getStaffByName(String name) {
+    final clean = name.trim().toLowerCase();
+    return _staffList
+        .where((s) => s.name.trim().toLowerCase() == clean)
+        .firstOrNull;
+  }
+
+  /// Dynamically updates staff when a new work card is assigned to them
+  static void assignWorkToStaff({
+    required String staffName,
+    required String workId,
+    required String workTitle,
+    required String customerName,
+    required String vehiclePlate,
+  }) {
+    final idx = _staffList.indexWhere(
+      (s) =>
+          s.name.trim().toLowerCase() == staffName.trim().toLowerCase() ||
+          staffName.trim().toLowerCase().contains(s.name.trim().toLowerCase()),
+    );
+    if (idx != -1) {
+      final s = _staffList[idx];
+      _staffList[idx] = s.copyWith(
+        todayWorks: s.todayWorks + 1,
+        pendingWorks: s.pendingWorks + 1,
+        currentWork: workTitle.isNotEmpty ? workTitle : s.currentWork,
+        currentWorkId: workId,
+        currentCustomer: customerName,
+        currentVehicle: vehiclePlate,
+        activityStatus: 'Working',
+      );
+    }
+  }
+
+  /// Dynamically updates both old and new staff on work reassignment
+  static void reassignWorkFromStaff({
+    required String oldStaffName,
+    required String newStaffName,
+    required String workId,
+    required String workTitle,
+    required String customerName,
+    required String vehiclePlate,
+  }) {
+    // 1. Decrement from old staff
+    final oldIdx = _staffList.indexWhere(
+      (s) =>
+          s.name.trim().toLowerCase() == oldStaffName.trim().toLowerCase() ||
+          oldStaffName.trim().toLowerCase().contains(s.name.trim().toLowerCase()),
+    );
+    if (oldIdx != -1) {
+      final oldStaff = _staffList[oldIdx];
+      _staffList[oldIdx] = oldStaff.copyWith(
+        todayWorks: (oldStaff.todayWorks - 1).clamp(0, 999),
+        pendingWorks: (oldStaff.pendingWorks - 1).clamp(0, 999),
+        currentWork: oldStaff.currentWorkId == workId ? '-' : oldStaff.currentWork,
+      );
+    }
+
+    // 2. Assign to new staff
+    assignWorkToStaff(
+      staffName: newStaffName,
+      workId: workId,
+      workTitle: workTitle,
+      customerName: customerName,
+      vehiclePlate: vehiclePlate,
+    );
+  }
+
+  /// Dynamically updates staff stats when a work card is completed
+  static void completeWorkForStaff({
+    required String staffName,
+    required String workId,
+  }) {
+    final idx = _staffList.indexWhere(
+      (s) =>
+          s.name.trim().toLowerCase() == staffName.trim().toLowerCase() ||
+          staffName.trim().toLowerCase().contains(s.name.trim().toLowerCase()),
+    );
+    if (idx != -1) {
+      final s = _staffList[idx];
+      _staffList[idx] = s.copyWith(
+        completedWorks: s.completedWorks + 1,
+        pendingWorks: (s.pendingWorks - 1).clamp(0, 999),
+        currentWork: s.currentWorkId == workId ? 'Completed' : s.currentWork,
+      );
+    }
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -982,8 +1070,12 @@ class _StaffListPageState extends State<StaffListPage> {
     }
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const CreateWorkPage()),
-    );
+      MaterialPageRoute(
+        builder: (context) => CreateWorkPage(initialStaff: s),
+      ),
+    ).then((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   void _showStaffQuickMenu(StaffModel s) {

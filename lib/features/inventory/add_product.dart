@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/core/utils/image_compressor.dart';
 import 'package:maa_tara/features/categories/add_category.dart';
 import 'package:maa_tara/features/categories/category_model.dart';
 import 'package:maa_tara/features/inventory/inventory_models.dart';
@@ -64,6 +67,12 @@ class _AddProductPageState extends State<AddProductPage> {
   bool _isTaxInclusive =
       false; // False = Price + GST (Exclusive), True = MRP (Inclusive)
   bool _isSubmitting = false;
+
+  // Image & Auto-Compression State (~5 KB)
+  File? _productImageFile;
+  String _productImagePath = '';
+  String? _compressionInfo;
+  bool _isCompressingImage = false;
 
   final List<String> _brands = [
     'Bosch',
@@ -213,6 +222,15 @@ class _AddProductPageState extends State<AddProductPage> {
     _selectedSecondaryUnit = item?.secondaryUnit ?? 'Box';
     _selectedGstRate = item?.gstRate ?? 18.0;
     _isTaxInclusive = item?.isTaxInclusive ?? false;
+
+    if (item != null && item.imagePath.isNotEmpty) {
+      _productImagePath = item.imagePath;
+      final f = File(item.imagePath);
+      if (f.existsSync()) {
+        _productImageFile = f;
+        _compressionInfo = ImageCompressor.formatBytes(f.lengthSync());
+      }
+    }
   }
 
   @override
@@ -308,6 +326,7 @@ class _AddProductPageState extends State<AddProductPage> {
       supplier: _supplierNameController.text.trim(),
       supplierGstNumber: _supplierGstController.text.trim().toUpperCase(),
       supplierPhone: _supplierPhoneController.text.trim(),
+      imagePath: _productImagePath,
       lastUpdated: 'Just now',
     );
 
@@ -426,6 +445,10 @@ class _AddProductPageState extends State<AddProductPage> {
                 title: 'Basic & Part Information',
               ),
               const SizedBox(height: 12),
+
+              // Product Photo Card (~5 KB Auto Compression)
+              _buildProductPhotoPicker(),
+              const SizedBox(height: 14),
 
               // Product Name *
               _buildLabel('Product / Spare Part Name'),
@@ -1425,6 +1448,291 @@ class _AddProductPageState extends State<AddProductPage> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  // ── 📸 Product Photo & Auto-Compression (~5 KB) ──────────────────────────
+
+  void _showPhotoPickerOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: _C.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: _C.muted.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Upload Product Photo',
+                style: TextStyle(
+                  color: _C.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Photo is auto-compressed to ~5 KB for instant syncing',
+                style: TextStyle(color: _C.muted, fontSize: 12),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _pickAndCompressProductImage(ImageSource.camera);
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          color: _C.inputFill,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: _C.divider),
+                        ),
+                        child: Column(
+                          children: const [
+                            Icon(Icons.camera_alt_rounded, color: _C.accent, size: 28),
+                            SizedBox(height: 8),
+                            Text(
+                              'Camera',
+                              style: TextStyle(color: _C.white, fontWeight: FontWeight.w600, fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _pickAndCompressProductImage(ImageSource.gallery);
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          color: _C.inputFill,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: _C.divider),
+                        ),
+                        child: Column(
+                          children: const [
+                            Icon(Icons.photo_library_rounded, color: _C.accent, size: 28),
+                            SizedBox(height: 8),
+                            Text(
+                              'Gallery',
+                              style: TextStyle(color: _C.white, fontWeight: FontWeight.w600, fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickAndCompressProductImage(ImageSource source) async {
+    setState(() => _isCompressingImage = true);
+    try {
+      final result = await ImageCompressor.pickAndCompress(
+        source: source,
+        targetKb: 5,
+        maxDimension: 300,
+      );
+      if (result != null && mounted) {
+        setState(() {
+          _productImageFile = result.file;
+          _productImagePath = result.file.path;
+          _compressionInfo =
+              '${result.compressedSizeFormatted} (~5 KB, saved ${result.compressionRatio.toStringAsFixed(0)}%)';
+        });
+      }
+    } catch (e) {
+      debugPrint('[AddProduct] Error picking/compressing photo: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isCompressingImage = false);
+      }
+    }
+  }
+
+  Widget _buildProductPhotoPicker() {
+    if (_isCompressingImage) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: _C.inputFill,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _C.accent.withValues(alpha: 0.5)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2, color: _C.accent),
+            ),
+            SizedBox(width: 12),
+            Text(
+              'Compressing photo to ~5 KB...',
+              style: TextStyle(color: _C.white, fontSize: 12.5, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_productImageFile != null || (_productImagePath.isNotEmpty && File(_productImagePath).existsSync())) {
+      final file = _productImageFile ?? File(_productImagePath);
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: _C.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _C.accent.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.file(
+                file,
+                width: 64,
+                height: 64,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: _C.green.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(Icons.check_circle_rounded, color: _C.green, size: 12),
+                            SizedBox(width: 4),
+                            Text(
+                              'Auto-Compressed',
+                              style: TextStyle(color: _C.green, fontSize: 10.5, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _compressionInfo ?? ImageCompressor.formatBytes(file.lengthSync()),
+                    style: const TextStyle(color: _C.white, fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 2),
+                  const Text(
+                    'Stored at ultra-light ~5 KB size',
+                    style: TextStyle(color: _C.muted, fontSize: 10.5),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              tooltip: 'Change Photo',
+              icon: const Icon(Icons.edit_outlined, color: _C.accent, size: 20),
+              onPressed: _showPhotoPickerOptions,
+            ),
+            IconButton(
+              tooltip: 'Remove Photo',
+              icon: const Icon(Icons.delete_outline, color: _C.red, size: 20),
+              onPressed: () {
+                setState(() {
+                  _productImageFile = null;
+                  _productImagePath = '';
+                  _compressionInfo = null;
+                });
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    return InkWell(
+      onTap: _showPhotoPickerOptions,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        decoration: BoxDecoration(
+          color: _C.inputFill,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _C.divider),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: _C.accent.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.add_a_photo_outlined, color: _C.accent, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    'Add Product / Spare Part Photo',
+                    style: TextStyle(color: _C.white, fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Auto-compressed to ~5 KB for instant syncing',
+                    style: TextStyle(color: _C.muted, fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: _C.muted, size: 20),
+          ],
         ),
       ),
     );

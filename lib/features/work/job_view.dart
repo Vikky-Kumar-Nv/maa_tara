@@ -3,7 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/core/utils/image_compressor.dart';
+import 'package:maa_tara/features/staff/staff_details.dart';
+import 'package:maa_tara/features/staff/staff_list.dart';
+import 'package:maa_tara/features/work/create_work.dart';
 import 'package:maa_tara/features/work/job.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 typedef _C = AppColors;
 
@@ -24,7 +29,6 @@ typedef JobViewPage = WorkViewPage;
 
 class _WorkViewPageState extends State<WorkViewPage> {
   late WorkStatus _currentStatus;
-  final ImagePicker _picker = ImagePicker();
 
   final List<String> _additionalRequirements = [
     'Check brake disc condition',
@@ -57,14 +61,22 @@ class _WorkViewPageState extends State<WorkViewPage> {
     _currentStatus = widget.work?.status ?? WorkStatus.inProgress;
   }
 
+  WorkModel? get _currentWork {
+    final wid = widget.work?.workId;
+    if (wid == null) return widget.work;
+    return WorkRepository.works.where((w) => w.workId == wid).firstOrNull ??
+        widget.work;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final workId = widget.work?.workId ?? 'WORK-1058';
-    final customerName = widget.work?.customerName ?? 'Rahul Sharma';
-    final phone = widget.work?.phone ?? '9876543210';
-    final vehiclePlate = widget.work?.vehiclePlate ?? 'DL 8C AX 1234';
-    final carModel = widget.work?.carModel ?? 'Hyundai i20';
-    final assignedStaff = widget.work?.assignedStaff ?? 'Vikram Singh';
+    final work = _currentWork;
+    final workId = work?.workId ?? 'WORK-1058';
+    final customerName = work?.customerName ?? 'Rahul Sharma';
+    final phone = work?.phone ?? '9876543210';
+    final vehiclePlate = work?.vehiclePlate ?? 'DL 8C AX 1234';
+    final carModel = work?.carModel ?? 'Hyundai i20';
+    final assignedStaff = work?.assignedStaff ?? 'Vikram Singh';
 
     return Scaffold(
       backgroundColor: _C.bg,
@@ -197,29 +209,27 @@ class _WorkViewPageState extends State<WorkViewPage> {
     );
   }
 
+  void _openEditWork() async {
+    final cur = _currentWork;
+    if (cur != null) {
+      final updated = await Navigator.push<WorkModel>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CreateWorkPage(workToEdit: cur),
+        ),
+      );
+      if (updated != null && mounted) {
+        setState(() {
+          _currentStatus = updated.status;
+        });
+      }
+    }
+  }
+
   // ── Status Pill Dropdown ────────────────────────────────────────────────────
   Widget _buildStatusPill() {
-    Color statusColor;
-    String statusText;
-
-    switch (_currentStatus) {
-      case WorkStatus.inProgress:
-        statusColor = _C.blue;
-        statusText = 'In Progress';
-        break;
-      case WorkStatus.pending:
-        statusColor = _C.amber;
-        statusText = 'Pending';
-        break;
-      case WorkStatus.onHold:
-        statusColor = _C.muted;
-        statusText = 'On Hold';
-        break;
-      case WorkStatus.completed:
-        statusColor = _C.green;
-        statusText = 'Completed';
-        break;
-    }
+    final statusColor = _currentStatus.color;
+    final statusText = _currentStatus.label;
 
     return PopupMenuButton<WorkStatus>(
       color: _C.card,
@@ -228,46 +238,27 @@ class _WorkViewPageState extends State<WorkViewPage> {
         setState(() {
           _currentStatus = status;
         });
-
-        Color color = _C.blue;
-        String text = 'In Progress';
-        switch (status) {
-          case WorkStatus.inProgress:
-            color = _C.blue;
-            text = 'In Progress';
-            break;
-          case WorkStatus.pending:
-            color = _C.amber;
-            text = 'Pending';
-            break;
-          case WorkStatus.onHold:
-            color = _C.muted;
-            text = 'On Hold';
-            break;
-          case WorkStatus.completed:
-            color = _C.green;
-            text = 'Completed';
-            break;
+        final wid = _currentWork?.workId;
+        if (wid != null) {
+          WorkRepository.updateWorkStatus(wid, status);
         }
-
-        _showSuccessDialog(
-          title: 'Status Updated Successfully!',
-          message: 'Work status has been updated to "$text".',
-          icon: Icons.sync,
-          iconColor: color,
-        );
       },
       itemBuilder: (context) => WorkStatus.values.map((status) {
-        String label = status.name.toUpperCase();
-        if (status == WorkStatus.inProgress) label = 'IN PROGRESS';
-        if (status == WorkStatus.onHold) label = 'ON HOLD';
-
         return PopupMenuItem(
           value: status,
           child: Row(
             children: [
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: status.color,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
               Text(
-                label,
+                status.label,
                 style: TextStyle(
                   color: _currentStatus == status ? _C.accent : _C.white,
                   fontWeight: _currentStatus == status
@@ -293,6 +284,15 @@ class _WorkViewPageState extends State<WorkViewPage> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                color: statusColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 6),
             Text(
               statusText,
               style: TextStyle(
@@ -321,14 +321,7 @@ class _WorkViewPageState extends State<WorkViewPage> {
             size: 22,
           ),
           label: 'Call',
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Calling $phone...'),
-                backgroundColor: _C.card,
-              ),
-            );
-          },
+          onTap: () => _makePhoneCall(phone),
         ),
         _commButton(
           iconWidget: const SizedBox(
@@ -337,14 +330,7 @@ class _WorkViewPageState extends State<WorkViewPage> {
             child: CustomPaint(painter: _WhatsAppIconPainter(color: _C.accent)),
           ),
           label: 'WhatsApp',
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Opening WhatsApp for $phone...'),
-                backgroundColor: _C.card,
-              ),
-            );
-          },
+          onTap: () => _openWhatsApp(phone),
         ),
         _commButton(
           iconWidget: const Icon(Icons.more_horiz, color: _C.accent, size: 22),
@@ -373,7 +359,10 @@ class _WorkViewPageState extends State<WorkViewPage> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: _C.card,
-              border: Border.all(color: _C.accent.withValues(alpha: 0.4), width: 1.2),
+              border: Border.all(
+                color: _C.accent.withValues(alpha: 0.4),
+                width: 1.2,
+              ),
             ),
             alignment: Alignment.center,
             child: iconWidget,
@@ -392,6 +381,70 @@ class _WorkViewPageState extends State<WorkViewPage> {
     );
   }
 
+  Future<void> _makePhoneCall(String phoneNumber) async {
+    final cleaned = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
+    final Uri uri = Uri.parse('tel:$cleaned');
+    try {
+      final launched = await launchUrl(uri);
+      if (!launched) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } catch (_) {
+      try {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not open phone dialer for $phoneNumber'),
+              backgroundColor: _C.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _openWhatsApp(String phoneNumber, {String? customText}) async {
+    var cleaned = phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
+    if (cleaned.length == 10) {
+      cleaned = '91$cleaned';
+    }
+    final message =
+        customText ??
+        'Hello, regarding your vehicle service (${_currentWork?.workId ?? ""}) at Maa Tara Automobiles.';
+    final encoded = Uri.encodeComponent(message);
+
+    final appUri = Uri.parse('whatsapp://send?phone=$cleaned&text=$encoded');
+    final webUri = Uri.parse('https://wa.me/$cleaned?text=$encoded');
+
+    try {
+      if (await canLaunchUrl(appUri)) {
+        await launchUrl(appUri);
+        return;
+      }
+    } catch (_) {}
+
+    try {
+      final launched = await launchUrl(
+        webUri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched) {
+        await launchUrl(webUri, mode: LaunchMode.platformDefault);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not open WhatsApp for $phoneNumber'),
+            backgroundColor: _C.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _showMoreOptionsMenu(String phone) {
     showModalBottomSheet(
       context: context,
@@ -405,6 +458,25 @@ class _WorkViewPageState extends State<WorkViewPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              ListTile(
+                leading: const Icon(Icons.edit_outlined, color: _C.accent),
+                title: const Text(
+                  'Edit Work Details',
+                  style: TextStyle(
+                    color: _C.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                subtitle: const Text(
+                  'Update customer, vehicle, service or staff',
+                  style: TextStyle(color: _C.muted, fontSize: 11),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _openEditWork();
+                },
+              ),
+              const Divider(color: _C.divider, height: 1),
               ListTile(
                 leading: const Icon(Icons.share, color: _C.accent),
                 title: const Text(
@@ -617,56 +689,98 @@ class _WorkViewPageState extends State<WorkViewPage> {
 
   // ── Assigned Staff Card ─────────────────────────────────────────────────────
   Widget _buildAssignedStaffCard(String staffName) {
+    final matchedStaff = StaffRepository.getStaffByName(staffName);
+    final avatar =
+        matchedStaff?.avatarUrl ??
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80';
+    final phone = matchedStaff?.phone ?? '9876549870';
+    final role = matchedStaff?.role ?? 'Technician';
+
     return _sectionCard(
       icon: Icons.people_outline,
       title: 'Assigned Staff',
       children: [
         Row(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(18),
-              child: Container(
-                width: 36,
-                height: 36,
-                color: const Color(0xFF0F1B2B),
-                child: Image.network(
-                  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.person, color: _C.muted, size: 22),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    staffName,
-                    style: const TextStyle(
-                      color: _C.white,
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: const [
-                      Text(
-                        '9876549870',
-                        style: TextStyle(color: _C.muted, fontSize: 11),
+              child: InkWell(
+                onTap: () {
+                  if (matchedStaff != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            StaffDetailsPage(staff: matchedStaff),
                       ),
-                      SizedBox(width: 4),
-                      Icon(Icons.phone, color: _C.accent, size: 11),
-                    ],
-                  ),
-                ],
+                    ).then((_) {
+                      if (mounted) setState(() {});
+                    });
+                  }
+                },
+                borderRadius: BorderRadius.circular(10),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(18),
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        color: const Color(0xFF0F1B2B),
+                        child: Image.network(
+                          avatar,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(
+                                Icons.person,
+                                color: _C.muted,
+                                size: 22,
+                              ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                staffName,
+                                style: const TextStyle(
+                                  color: _C.white,
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              if (matchedStaff != null) ...[
+                                const SizedBox(width: 4),
+                                const Icon(
+                                  Icons.open_in_new,
+                                  color: _C.accent,
+                                  size: 12,
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '$role • $phone',
+                            style: const TextStyle(
+                              color: _C.muted,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             OutlinedButton(
               onPressed: () {
-                _showReassignStaffSheet();
+                _showReassignStaffSheet(workId: _currentWork?.workId ?? '');
               },
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: _C.accent, width: 1),
@@ -695,13 +809,8 @@ class _WorkViewPageState extends State<WorkViewPage> {
     );
   }
 
-  void _showReassignStaffSheet() {
-    final staffMembers = [
-      'Vikram Singh',
-      'Arjun Mehta',
-      'Rohit Kumar',
-      'Suresh Patel',
-    ];
+  void _showReassignStaffSheet({required String workId}) {
+    final staffList = StaffRepository.staffList;
 
     showModalBottomSheet(
       context: context,
@@ -710,38 +819,66 @@ class _WorkViewPageState extends State<WorkViewPage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Reassign Staff',
-                style: TextStyle(
-                  color: _C.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Reassign Staff',
+                  style: TextStyle(
+                    color: _C.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              ...staffMembers.map((staff) {
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.person, color: _C.accent),
-                  title: Text(staff, style: const TextStyle(color: _C.white)),
-                  onTap: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Work reassigned to $staff'),
-                        backgroundColor: _C.card,
+                const SizedBox(height: 12),
+                ...staffList.map((staff) {
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.network(
+                        staff.avatarUrl,
+                        width: 32,
+                        height: 32,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) =>
+                            const Icon(Icons.person, color: _C.accent),
                       ),
-                    );
-                  },
-                );
-              }),
-            ],
+                    ),
+                    title: Text(
+                      staff.name,
+                      style: const TextStyle(
+                        color: _C.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${staff.role} • ${staff.todayWorks} tasks today',
+                      style: const TextStyle(color: _C.muted, fontSize: 11),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      WorkRepository.reassignStaff(
+                        workId,
+                        staff.name,
+                        staff.avatarUrl,
+                      );
+                      setState(() {});
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Work reassigned to ${staff.name}'),
+                          backgroundColor: _C.card,
+                        ),
+                      );
+                    },
+                  );
+                }),
+              ],
+            ),
           ),
         );
       },
@@ -1125,92 +1262,16 @@ class _WorkViewPageState extends State<WorkViewPage> {
 
   // 1. Change Status Bottom Sheet
   void _showChangeStatusSheet() {
-    showModalBottomSheet(
+    final wid = _currentWork?.workId ?? widget.work?.workId ?? 'WORK';
+    showWorkStatusModalSheet(
       context: context,
-      backgroundColor: _C.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Change Work Status',
-                style: TextStyle(
-                  color: _C.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 14),
-              ...WorkStatus.values.map((status) {
-                Color color;
-                String text;
-                switch (status) {
-                  case WorkStatus.inProgress:
-                    color = _C.blue;
-                    text = 'In Progress';
-                    break;
-                  case WorkStatus.pending:
-                    color = _C.amber;
-                    text = 'Pending';
-                    break;
-                  case WorkStatus.onHold:
-                    color = _C.muted;
-                    text = 'On Hold';
-                    break;
-                  case WorkStatus.completed:
-                    color = _C.green;
-                    text = 'Completed';
-                    break;
-                }
-
-                final isSelected = _currentStatus == status;
-
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: color,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  title: Text(
-                    text,
-                    style: TextStyle(
-                      color: isSelected ? _C.accent : _C.white,
-                      fontWeight: isSelected
-                          ? FontWeight.w700
-                          : FontWeight.w500,
-                      fontSize: 14,
-                    ),
-                  ),
-                  trailing: isSelected
-                      ? const Icon(Icons.check, color: _C.accent)
-                      : null,
-                  onTap: () {
-                    setState(() {
-                      _currentStatus = status;
-                    });
-                    Navigator.pop(context);
-                    _showSuccessDialog(
-                      title: 'Status Updated Successfully!',
-                      message: 'Work status has been changed to "$text".',
-                      icon: Icons.sync,
-                      iconColor: color,
-                    );
-                  },
-                );
-              }),
-            ],
-          ),
-        );
+      workId: wid,
+      currentStatus: _currentStatus,
+      onStatusSelected: (status) {
+        setState(() {
+          _currentStatus = status;
+        });
+        WorkRepository.updateWorkStatus(wid, status);
       },
     );
   }
@@ -1487,23 +1548,26 @@ class _WorkViewPageState extends State<WorkViewPage> {
     final galleryName = isBefore ? 'Before Photos' : 'After Photos';
 
     try {
-      final XFile? pickedFile = await _picker.pickImage(
-        source: source,
-        imageQuality: 85,
-      );
+      final CompressedImageResult? compressed =
+          await ImageCompressor.pickAndCompress(
+            source: source,
+            targetKb: 5,
+            maxDimension: 350,
+          );
 
-      if (pickedFile != null) {
+      if (compressed != null) {
         setState(() {
           if (isBefore) {
-            _beforePhotos.add(pickedFile.path);
+            _beforePhotos.add(compressed.file.path);
           } else {
-            _afterPhotos.add(pickedFile.path);
+            _afterPhotos.add(compressed.file.path);
           }
         });
 
         _showSuccessDialog(
-          title: 'Photo Added Successfully!',
-          message: 'Vehicle photo has been added to "$galleryName" gallery.',
+          title: 'Photo Added & Compressed!',
+          message:
+              'Vehicle photo compressed to ${compressed.compressedSizeFormatted} (~5 KB) for "$galleryName".',
           icon: Icons.check_circle_rounded,
           iconColor: _C.green,
         );

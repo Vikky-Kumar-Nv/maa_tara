@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:maa_tara/core/constants/colors.dart';
 import 'package:maa_tara/core/widgets/paginated_list.dart';
@@ -1239,20 +1240,32 @@ class _InventoryPageState extends State<InventoryPage> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: _C.inputFill,
+                if (item.imagePath.isNotEmpty &&
+                    File(item.imagePath).existsSync())
+                  ClipRRect(
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: _C.divider),
+                    child: Image.file(
+                      File(item.imagePath),
+                      width: 40,
+                      height: 40,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                else
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: _C.inputFill,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: _C.divider),
+                    ),
+                    child: const Icon(
+                      Icons.build_circle_outlined,
+                      color: _C.accent,
+                      size: 22,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.build_circle_outlined,
-                    color: _C.accent,
-                    size: 22,
-                  ),
-                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(

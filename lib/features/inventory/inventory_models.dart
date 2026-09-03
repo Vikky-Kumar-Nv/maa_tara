@@ -105,6 +105,7 @@ class InventoryItemModel {
   final String supplier; // Supplier Name / Company
   final String supplierGstNumber; // Supplier 15-digit GSTIN
   final String supplierPhone; // Supplier contact
+  final String imagePath; // Path to compressed local photo
   final String lastUpdated;
 
   const InventoryItemModel({
@@ -133,6 +134,7 @@ class InventoryItemModel {
     required this.supplier,
     this.supplierGstNumber = '',
     this.supplierPhone = '',
+    this.imagePath = '',
     required this.lastUpdated,
   });
 
@@ -178,6 +180,7 @@ class InventoryItemModel {
     String? supplier,
     String? supplierGstNumber,
     String? supplierPhone,
+    String? imagePath,
     String? lastUpdated,
   }) {
     return InventoryItemModel(
@@ -206,6 +209,7 @@ class InventoryItemModel {
       supplier: supplier ?? this.supplier,
       supplierGstNumber: supplierGstNumber ?? this.supplierGstNumber,
       supplierPhone: supplierPhone ?? this.supplierPhone,
+      imagePath: imagePath ?? this.imagePath,
       lastUpdated: lastUpdated ?? this.lastUpdated,
     );
   }

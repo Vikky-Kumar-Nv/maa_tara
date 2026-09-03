@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:maa_tara/core/constants/colors.dart';
@@ -382,22 +383,34 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                CategoryDetailPage(category: matchedCat),
+                      if (_product.imagePath.isNotEmpty &&
+                          File(_product.imagePath).existsSync())
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.file(
+                            File(_product.imagePath),
+                            width: 64,
+                            height: 64,
+                            fit: BoxFit.cover,
                           ),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(10),
-                      child: Tooltip(
-                        message: 'View ${matchedCat.name} Category Catalog',
-                        child: CategoryVisualAvatar(category: matchedCat, size: 64),
-                      ),
-                    ),
+                        )
+                      else
+                        InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    CategoryDetailPage(category: matchedCat),
+                              ),
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(10),
+                          child: Tooltip(
+                            message: 'View ${matchedCat.name} Category Catalog',
+                            child: CategoryVisualAvatar(category: matchedCat, size: 64),
+                          ),
+                        ),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(

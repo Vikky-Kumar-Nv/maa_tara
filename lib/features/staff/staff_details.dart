@@ -5,6 +5,8 @@ import 'package:maa_tara/features/staff/staff_attendance_log.dart';
 import 'package:maa_tara/features/staff/staff_list.dart';
 import 'package:maa_tara/features/staff/staff_work_history.dart';
 import 'package:maa_tara/features/work/create_work.dart';
+import 'package:maa_tara/features/work/job.dart';
+import 'package:maa_tara/features/work/job_view.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Staff Details Page
@@ -20,6 +22,48 @@ class StaffDetailsPage extends StatefulWidget {
 
 class _StaffDetailsPageState extends State<StaffDetailsPage> {
   late StaffModel _s;
+
+  // Live dynamic works from WorkRepository for this staff
+  List<WorkModel> get _staffWorks {
+    final clean = _s.name.trim().toLowerCase();
+    return WorkRepository.works.where((w) {
+      final assigned = w.assignedStaff.trim().toLowerCase();
+      return assigned == clean ||
+          assigned.contains(clean) ||
+          clean.contains(assigned);
+    }).toList();
+  }
+
+  int get _todayWorksCount {
+    final live = _staffWorks.length;
+    return live > 0 ? live : _s.todayWorks;
+  }
+
+  int get _completedWorksCount {
+    final live =
+        _staffWorks.where((w) => w.status == WorkStatus.completed).length;
+    return live > 0 ? live : _s.completedWorks;
+  }
+
+  int get _pendingWorksCount {
+    final live =
+        _staffWorks.where((w) => w.status != WorkStatus.completed).length;
+    return live > 0 ? live : _s.pendingWorks;
+  }
+
+  WorkModel? get _currentWorkModel {
+    final inProgress = _staffWorks
+        .where((w) => w.status == WorkStatus.inProgress)
+        .firstOrNull;
+    if (inProgress != null) return inProgress;
+    final pending = _staffWorks
+        .where(
+          (w) =>
+              w.status == WorkStatus.pending || w.status == WorkStatus.onHold,
+        )
+        .firstOrNull;
+    return pending ?? _staffWorks.firstOrNull;
+  }
 
   @override
   void initState() {
@@ -414,15 +458,19 @@ class _StaffDetailsPageState extends State<StaffDetailsPage> {
               children: [
                 _buildSummaryItem(
                   "Today's Works",
-                  '${_s.todayWorks}',
+                  '$_todayWorksCount',
                   AppColors.blue,
                 ),
                 _buildSummaryItem(
                   'Completed',
-                  '${_s.completedWorks}',
+                  '$_completedWorksCount',
                   AppColors.green,
                 ),
-                _buildSummaryItem('Pending', '${_s.pendingWorks}', AppColors.red),
+                _buildSummaryItem(
+                  'Pending',
+                  '$_pendingWorksCount',
+                  AppColors.red,
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -438,7 +486,9 @@ class _StaffDetailsPageState extends State<StaffDetailsPage> {
                 Row(
                   children: [
                     Text(
-                      _s.currentWork,
+                      _currentWorkModel != null
+                          ? (_currentWorkModel!.service ?? _currentWorkModel!.carModel)
+                          : _s.currentWork,
                       style: const TextStyle(
                         color: AppColors.white,
                         fontSize: 12.5,
@@ -557,41 +607,103 @@ class _StaffDetailsPageState extends State<StaffDetailsPage> {
 
   // ── Current Work Card ───────────────────────────────────────────────────────
   Widget _buildCurrentWorkCard() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.divider, width: 1),
-      ),
-      child: Column(
-        children: [
-          _buildWorkRow('Work ID', _s.currentWorkId, isHighlighted: true),
-          const SizedBox(height: 8),
-          _buildWorkRow('Customer', _s.currentCustomer),
-          const SizedBox(height: 8),
-          _buildWorkRow('Vehicle', _s.currentVehicle),
-          const SizedBox(height: 8),
-          _buildWorkRow('Work', _s.currentWork),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text(
-                'Status',
-                style: TextStyle(color: AppColors.muted, fontSize: 12),
+    final cur = _currentWorkModel;
+
+    if (cur == null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.divider, width: 1),
+        ),
+        child: Column(
+          children: [
+            const Icon(Icons.assignment_outlined, color: AppColors.muted, size: 28),
+            const SizedBox(height: 8),
+            const Text(
+              'No Active Work Assigned',
+              style: TextStyle(
+                color: AppColors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
               ),
-              Text(
-                'In Progress',
-                style: TextStyle(
-                  color: AppColors.blue,
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Assign a work card to get started',
+              style: TextStyle(color: AppColors.muted, fontSize: 11),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => JobViewPage(work: cur),
           ),
-        ],
+        ).then((_) {
+          if (mounted) setState(() {});
+        });
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.accent.withValues(alpha: 0.35), width: 1),
+        ),
+        child: Column(
+          children: [
+            _buildWorkRow('Work ID', cur.workId, isHighlighted: true),
+            const SizedBox(height: 8),
+            _buildWorkRow('Customer', cur.customerName),
+            const SizedBox(height: 8),
+            _buildWorkRow('Vehicle', '${cur.carModel} (${cur.vehiclePlate})'),
+            const SizedBox(height: 8),
+            _buildWorkRow('Work', cur.service ?? cur.carModel),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Status',
+                  style: TextStyle(color: AppColors.muted, fontSize: 12),
+                ),
+                Row(
+                  children: [
+                    Text(
+                      cur.status == WorkStatus.inProgress
+                          ? 'In Progress'
+                          : (cur.status == WorkStatus.completed
+                              ? 'Completed'
+                              : (cur.status == WorkStatus.onHold
+                                  ? 'On Hold'
+                                  : 'Pending')),
+                      style: TextStyle(
+                        color: cur.status == WorkStatus.inProgress
+                            ? AppColors.blue
+                            : (cur.status == WorkStatus.completed
+                                ? AppColors.green
+                                : AppColors.amber),
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.chevron_right, color: AppColors.accent, size: 16),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -635,8 +747,18 @@ class _StaffDetailsPageState extends State<StaffDetailsPage> {
               }
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const CreateWorkPage()),
-              );
+                MaterialPageRoute(
+                  builder: (context) => CreateWorkPage(initialStaff: _s),
+                ),
+              ).then((_) {
+                if (mounted) {
+                  final updated = StaffRepository.staffList.firstWhere(
+                    (s) => s.id == _s.id,
+                    orElse: () => _s,
+                  );
+                  setState(() => _s = updated);
+                }
+              });
             },
             style: OutlinedButton.styleFrom(
               backgroundColor: isSuspended ? AppColors.inputFill : AppColors.card,

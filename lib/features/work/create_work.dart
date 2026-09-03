@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/core/utils/image_compressor.dart';
 import 'package:maa_tara/features/customers/customer_list.dart';
+import 'package:maa_tara/features/staff/staff_list.dart';
 import 'package:maa_tara/features/work/job.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -11,8 +13,15 @@ import 'package:maa_tara/features/work/job.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 class CreateWorkPage extends StatefulWidget {
   final CustomerModel? preselectedCustomer;
+  final StaffModel? initialStaff;
+  final WorkModel? workToEdit;
 
-  const CreateWorkPage({super.key, this.preselectedCustomer});
+  const CreateWorkPage({
+    super.key,
+    this.preselectedCustomer,
+    this.initialStaff,
+    this.workToEdit,
+  });
 
   @override
   State<CreateWorkPage> createState() => _CreateWorkPageState();
@@ -20,7 +29,6 @@ class CreateWorkPage extends StatefulWidget {
 
 class _CreateWorkPageState extends State<CreateWorkPage> {
   final _formKey = GlobalKey<FormState>();
-  final ImagePicker _picker = ImagePicker();
 
   // Generated Work ID
   late String _generatedWorkId;
@@ -100,12 +108,18 @@ class _CreateWorkPageState extends State<CreateWorkPage> {
     'Car Wash & Detailing',
   ];
 
-  final List<String> _staffList = [
-    'Vikram Singh',
-    'Arjun Mehta',
-    'Rohit Kumar',
-    'Suresh Patel',
-  ];
+  List<String> get _staffList {
+    final list = StaffRepository.staffList.map((s) => s.name).toList();
+    if (list.isEmpty) {
+      return const [
+        'Vikram Singh',
+        'Arjun Mehta',
+        'Rohit Kumar',
+        'Suresh Patel',
+      ];
+    }
+    return list;
+  }
 
   final Map<String, String> _staffAvatars = {
     'Vikram Singh': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
@@ -114,15 +128,37 @@ class _CreateWorkPageState extends State<CreateWorkPage> {
     'Suresh Patel': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80',
   };
 
+  bool get _isEdit => widget.workToEdit != null;
+
   @override
   void initState() {
     super.initState();
-    _generatedWorkId =
-        'WORK-${1059 + DateTime.now().millisecondsSinceEpoch % 900}';
 
-    // If preselected customer is provided (from AddCustomer or CustomerDetails)
-    if (widget.preselectedCustomer != null) {
-      _applyCustomerData(widget.preselectedCustomer!);
+    if (_isEdit) {
+      final w = widget.workToEdit!;
+      _generatedWorkId = w.workId;
+      _customerNameController.text = w.customerName;
+      _phoneController.text = w.phone;
+      _vehiclePlateController.text = w.vehiclePlate;
+      _vehicleModelController.text = w.carModel;
+      _serviceTitleController.text = w.service ?? '';
+      _selectedStaff = w.assignedStaff;
+      _selectedStatus = w.status;
+    } else {
+      _generatedWorkId =
+          'WORK-${1059 + DateTime.now().millisecondsSinceEpoch % 900}';
+
+      // Dynamic initial staff selection
+      if (widget.initialStaff != null) {
+        _selectedStaff = widget.initialStaff!.name;
+      } else if (StaffRepository.staffList.isNotEmpty) {
+        _selectedStaff = StaffRepository.staffList.first.name;
+      }
+
+      // If preselected customer is provided (from AddCustomer or CustomerDetails)
+      if (widget.preselectedCustomer != null) {
+        _applyCustomerData(widget.preselectedCustomer!);
+      }
     }
   }
 
@@ -457,9 +493,11 @@ class _CreateWorkPageState extends State<CreateWorkPage> {
                                 ),
                                 elevation: 0,
                               ),
-                              child: const Text(
-                                'Create Work Card',
-                                style: TextStyle(
+                              child: Text(
+                                _isEdit
+                                    ? 'Update Work Card'
+                                    : 'Create Work Card',
+                                style: const TextStyle(
                                   color: Colors.black,
                                   fontWeight: FontWeight.w800,
                                   fontSize: 14,
@@ -519,9 +557,9 @@ class _CreateWorkPageState extends State<CreateWorkPage> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  const Text(
-                    'Create Work',
-                    style: TextStyle(
+                  Text(
+                    _isEdit ? 'Edit Work' : 'Create Work',
+                    style: const TextStyle(
                       color: AppColors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -1173,16 +1211,15 @@ class _CreateWorkPageState extends State<CreateWorkPage> {
   // ── Photo Picker Handler ────────────────────────────────────────────────────
   Future<void> _pickPhoto(ImageSource source) async {
     try {
-      final XFile? image = await _picker.pickImage(
+      final compressed = await ImageCompressor.pickAndCompress(
         source: source,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 85,
+        targetKb: 5,
+        maxDimension: 400,
       );
 
-      if (image != null) {
+      if (compressed != null) {
         setState(() {
-          _capturedPhotoFiles.add(File(image.path));
+          _capturedPhotoFiles.add(compressed.file);
         });
       }
     } catch (e) {
@@ -1271,38 +1308,73 @@ class _CreateWorkPageState extends State<CreateWorkPage> {
           : '$brand i20';
       final service = _serviceTitleController.text.trim();
 
+      final matchedStaff = StaffRepository.getStaffByName(_selectedStaff);
       final staffAvatar =
+          matchedStaff?.avatarUrl ??
           _staffAvatars[_selectedStaff] ??
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80';
 
-      final newWork = WorkModel(
-        workId: _generatedWorkId,
-        customerName: customerName,
-        phone: phone,
-        vehiclePlate: vehiclePlate,
-        carModel: model,
-        service: service,
-        assignedStaff: _selectedStaff,
-        date:
-            '${DateTime.now().day} ${_getMonthName(DateTime.now().month)} ${DateTime.now().year}',
-        time:
-            '${TimeOfDay.now().hour.toString().padLeft(2, '0')}:${TimeOfDay.now().minute.toString().padLeft(2, '0')} ${TimeOfDay.now().period == DayPeriod.am ? 'AM' : 'PM'}',
-        status: _selectedStatus,
-        carImageUrl: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=300&auto=format&fit=crop&q=80',
-        staffAvatarUrl: staffAvatar,
-      );
+      final carImage = _capturedPhotoFiles.isNotEmpty
+          ? _capturedPhotoFiles.first.path
+          : (_inspectionPhotos.isNotEmpty
+              ? _inspectionPhotos.first
+              : 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=300&auto=format&fit=crop&q=80');
 
-      // Add to dynamic repository
-      WorkRepository.addWork(newWork);
+      if (_isEdit) {
+        final updatedWork = widget.workToEdit!.copyWith(
+          customerName: customerName,
+          phone: phone,
+          vehiclePlate: vehiclePlate,
+          carModel: model,
+          service: service.isNotEmpty ? service : null,
+          assignedStaff: _selectedStaff,
+          status: _selectedStatus,
+          staffAvatarUrl: staffAvatar,
+          carImageUrl: _capturedPhotoFiles.isNotEmpty
+              ? _capturedPhotoFiles.first.path
+              : widget.workToEdit!.carImageUrl,
+        );
 
-      _showSuccessDialog(
-        title: 'Work Card Created!',
-        message:
-            'Work "$_generatedWorkId" for $customerName ($vehiclePlate) has been created successfully.',
-        onDismiss: () {
-          Navigator.pop(context, newWork);
-        },
-      );
+        WorkRepository.updateWork(updatedWork);
+
+        _showSuccessDialog(
+          title: 'Work Card Updated!',
+          message:
+              'Work "$_generatedWorkId" for $customerName ($vehiclePlate) has been updated successfully.',
+          onDismiss: () {
+            Navigator.pop(context, updatedWork);
+          },
+        );
+      } else {
+        final newWork = WorkModel(
+          workId: _generatedWorkId,
+          customerName: customerName,
+          phone: phone,
+          vehiclePlate: vehiclePlate,
+          carModel: model,
+          service: service.isNotEmpty ? service : null,
+          assignedStaff: _selectedStaff,
+          date:
+              '${DateTime.now().day} ${_getMonthName(DateTime.now().month)} ${DateTime.now().year}',
+          time:
+              '${TimeOfDay.now().hour.toString().padLeft(2, '0')}:${TimeOfDay.now().minute.toString().padLeft(2, '0')} ${TimeOfDay.now().period == DayPeriod.am ? 'AM' : 'PM'}',
+          status: _selectedStatus,
+          carImageUrl: carImage,
+          staffAvatarUrl: staffAvatar,
+        );
+
+        // Add to dynamic repository
+        WorkRepository.addWork(newWork);
+
+        _showSuccessDialog(
+          title: 'Work Card Created!',
+          message:
+              'Work "$_generatedWorkId" for $customerName ($vehiclePlate) has been created successfully.',
+          onDismiss: () {
+            Navigator.pop(context, newWork);
+          },
+        );
+      }
     }
   }
 
