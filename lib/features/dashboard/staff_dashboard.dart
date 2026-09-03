@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/core/widgets/skeleton_loader.dart';
 import 'package:maa_tara/features/customers/add_customer.dart';
 import 'package:maa_tara/features/staff/staff_list.dart';
 import 'package:maa_tara/features/work/create_work.dart';
@@ -24,10 +25,17 @@ class _StaffDashboardPageState extends State<StaffDashboardPage> {
   late StaffModel _staff;
   final ImagePicker _picker = ImagePicker();
 
+  bool _isLoading = false;
   bool _isCheckedIn = true;
   String _checkInTime = '09:15 AM';
   String _checkOutTime = '--:-- PM';
   String _workingHours = '4h 25m';
+
+  Future<void> _handleRefresh() async {
+    setState(() => _isLoading = true);
+    await Future.delayed(const Duration(milliseconds: 800));
+    if (mounted) setState(() => _isLoading = false);
+  }
 
   // Recent Works List for Staff
   final List<WorkModel> _staffRecentWorks = [
@@ -195,12 +203,20 @@ class _StaffDashboardPageState extends State<StaffDashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    if (_isLoading) {
+      return const SkeletonStaffDashboardView();
+    }
+
+    return RefreshIndicator(
+      onRefresh: _handleRefresh,
+      color: AppColors.accent,
+      backgroundColor: AppColors.card,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           // ── Top Header Bar (Identical to Admin Welcome Row) ──────────────
           Row(
             children: [
@@ -355,7 +371,8 @@ class _StaffDashboardPageState extends State<StaffDashboardPage> {
           const SizedBox(height: 28),
         ],
       ),
-    );
+    ),
+  );
   }
 
   // ── 1. Today's Attendance Card ──────────────────────────────────────────────

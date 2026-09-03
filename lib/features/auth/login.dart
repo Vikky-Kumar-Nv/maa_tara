@@ -204,15 +204,31 @@ class _LoginPageState extends State<LoginPage> {
                               elevation: 0,
                             ),
                             child: _isLoading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.black,
+                                ? Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: const [
+                                      SizedBox(
+                                        height: 18,
+                                        width: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                Colors.black,
+                                              ),
+                                        ),
                                       ),
-                                    ),
+                                      SizedBox(width: 10),
+                                      Text(
+                                        'Authenticating...',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0.2,
+                                        ),
+                                      ),
+                                    ],
                                   )
                                 : Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -315,52 +331,47 @@ class _LoginPageState extends State<LoginPage> {
   Widget _buildBrandHeader() {
     return Column(
       children: [
-        // Glowing brand logo container
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppColors.card,
-            border: Border.all(
-              color: AppColors.accent.withValues(alpha: 0.6),
-              width: 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.accent.withValues(alpha: 0.2),
-                blurRadius: 16,
-                spreadRadius: 2,
+        // Brand Logo Image
+        Image.asset(
+          'assets/images/logo.png',
+          width: 260,
+          height: 105,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) => Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.card,
+              border: Border.all(
+                color: AppColors.accent.withValues(alpha: 0.6),
+                width: 2,
               ),
-            ],
-          ),
-          child: const Center(
-            child: Icon(
-              Icons.directions_car_filled_rounded,
-              color: AppColors.accent,
-              size: 38,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.accent.withValues(alpha: 0.2),
+                  blurRadius: 16,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: const Center(
+              child: Icon(
+                Icons.directions_car_filled_rounded,
+                color: AppColors.accent,
+                size: 38,
+              ),
             ),
           ),
         ),
-        const SizedBox(height: 14),
-
-        // Brand Name
-        const Text(
-          'MAARA AUTOMOBILES',
-          style: TextStyle(
-            color: AppColors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.5,
-          ),
-        ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 10),
         const Text(
           'Workshop Management & Service ERP',
           style: TextStyle(
             color: AppColors.muted,
             fontSize: 12.5,
             fontWeight: FontWeight.w500,
+            letterSpacing: 0.3,
           ),
         ),
       ],
@@ -688,7 +699,8 @@ class _LoginPageState extends State<LoginPage> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 700));
+    await Future.delayed(const Duration(milliseconds: 1500));
+    if (!mounted) return;
     setState(() => _isLoading = false);
 
     final identifier = _identifierController.text.trim();

@@ -9,6 +9,9 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: AppColors.card,
       elevation: 0,
+      titleSpacing: 0,
+      centerTitle: true,
+      toolbarHeight: 65,
 
       // Left side menu
       leading: IconButton(
@@ -22,6 +25,24 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
             ),
           );
         },
+      ),
+
+      // Center Brand Logo (Full & Unclipped)
+      title: SizedBox(
+        width: 220,
+        height: 56,
+        child: Image.asset(
+          'assets/images/app_nav-barrr.png',
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) => Image.asset(
+            'lib/core/images/app_nav-barrr.png',
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) => Image.asset(
+              'assets/images/logo.png',
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
       ),
 
       // Right side notification
@@ -43,5 +64,5 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(65);
 }

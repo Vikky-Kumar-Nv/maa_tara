@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:maa_tara/core/constants/colors.dart';
 import 'package:maa_tara/features/auth/login.dart';
+import 'package:maa_tara/features/categories/category_list.dart';
 import 'package:maa_tara/features/customers/customer_list.dart';
-import 'package:maa_tara/features/staff/staff_list.dart';
+import 'package:maa_tara/features/staff/staff_attendance_log.dart';
+import 'package:maa_tara/features/suppliers/supplier_list.dart';
+import 'package:maa_tara/main.dart';
 
 typedef _C = AppColors;
 
@@ -45,26 +48,44 @@ class MorePage extends StatelessWidget {
       _MoreMenuItem(
         title: 'Suppliers',
         icon: Icons.local_shipping_outlined,
-        onTap: () => _handleItemTap(context, 'Suppliers'),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const SupplierListPage()),
+          );
+        },
       ),
       _MoreMenuItem(
         title: 'Categories',
         icon: Icons.grid_view_rounded,
-        onTap: () => _handleItemTap(context, 'Categories'),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CategoryListPage()),
+          );
+        },
       ),
-      _MoreMenuItem(
-        title: 'Brands',
-        icon: Icons.loyalty_outlined,
-        onTap: () => _handleItemTap(context, 'Brands'),
-      ),
+      // _MoreMenuItem(
+      //   title: 'Brands',
+      //   icon: Icons.loyalty_outlined,
+      //   onTap: () => _handleItemTap(context, 'Brands'),
+      // ),
       _MoreMenuItem(
         title: 'Attendance',
         icon: Icons.assignment_ind_outlined,
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const StaffListPage()),
-          );
+          if (AuthSession.currentUserRole == 'staff' && AuthSession.currentStaff != null) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => StaffAttendanceLogPage(
+                  staff: AuthSession.currentStaff!,
+                ),
+              ),
+            );
+          } else {
+            _handleItemTap(context, 'Attendance');
+          }
         },
       ),
       _MoreMenuItem(
@@ -84,9 +105,12 @@ class MorePage extends StatelessWidget {
         onTap: () => _handleItemTap(context, 'Settings'),
       ),
       _MoreMenuItem(
-        title: 'Admin Profile',
+        title: AuthSession.currentUserRole == 'staff' ? 'My Profile' : 'Admin Profile',
         icon: Icons.account_circle_outlined,
-        onTap: () => _handleItemTap(context, 'Admin Profile'),
+        onTap: () => _handleItemTap(
+          context,
+          AuthSession.currentUserRole == 'staff' ? 'My Profile' : 'Admin Profile',
+        ),
       ),
       _MoreMenuItem(
         title: 'Change Password',

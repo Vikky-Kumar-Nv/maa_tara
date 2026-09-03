@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/core/widgets/paginated_list.dart';
+import 'package:maa_tara/core/widgets/skeleton_loader.dart';
 import 'package:maa_tara/features/staff/add_staff.dart';
 import 'package:maa_tara/features/staff/staff_details.dart';
 import 'package:maa_tara/features/work/create_work.dart';
@@ -235,9 +237,15 @@ class StaffListPage extends StatefulWidget {
 }
 
 class _StaffListPageState extends State<StaffListPage> {
+  bool _isLoading = false;
   String _selectedFilter = 'All';
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+
+  // Pagination state
+  int _currentPage = 1;
+  static const int _pageSize = 6;
+  bool _isLoadingMore = false;
 
   final List<String> _filterTabs = [
     'All',
@@ -247,6 +255,29 @@ class _StaffListPageState extends State<StaffListPage> {
     'Leave',
     'Suspended',
   ];
+
+  Future<void> _handleRefresh() async {
+    setState(() => _isLoading = true);
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (mounted) {
+      setState(() {
+        _currentPage = 1;
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _handleLoadMore() async {
+    if (_isLoadingMore || !_hasMore) return;
+    setState(() => _isLoadingMore = true);
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (mounted) {
+      setState(() {
+        _currentPage++;
+        _isLoadingMore = false;
+      });
+    }
+  }
 
   List<StaffModel> get _filteredStaff {
     final list = StaffRepository.staffList;
@@ -280,6 +311,14 @@ class _StaffListPageState extends State<StaffListPage> {
     }).toList();
   }
 
+  List<StaffModel> get _paginatedStaff {
+    final all = _filteredStaff;
+    final end = (_currentPage * _pageSize).clamp(0, all.length);
+    return all.sublist(0, end);
+  }
+
+  bool get _hasMore => _paginatedStaff.length < _filteredStaff.length;
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -288,214 +327,213 @@ class _StaffListPageState extends State<StaffListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final staffList = _filteredStaff;
+    final staffList = _paginatedStaff;
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Column(
+    return PaginatedListView<StaffModel>(
+      items: staffList,
+      isInitialLoading: _isLoading,
+      isLoadingMore: _isLoadingMore,
+      hasMore: _hasMore,
+      onRefresh: _handleRefresh,
+      onLoadMore: _handleLoadMore,
+      header: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Header Row: Title & + Add Staff Button ────────────────────────
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    'Staff',
+            // ── Header Row: Title & + Add Staff Button ────────────────────────
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'Staff',
+                      style: TextStyle(
+                        color: AppColors.white,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Manage your workshop staff',
+                      style: TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+
+                // + Add Staff Button
+                ElevatedButton.icon(
+                  onPressed: () => _openAddStaffPage(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.card,
+                    side: const BorderSide(color: AppColors.accent, width: 1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 9,
+                    ),
+                    elevation: 0,
+                  ),
+                  icon: const Icon(Icons.add, color: AppColors.accent, size: 16),
+                  label: const Text(
+                    'Add Staff',
                     style: TextStyle(
-                      color: AppColors.white,
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.3,
+                      color: AppColors.accent,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                  SizedBox(height: 2),
-                  Text(
-                    'Manage your workshop staff',
-                    style: TextStyle(
-                      color: AppColors.muted,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w400,
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+
+            // ── Search & Filter Row ───────────────────────────────────────────
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: AppColors.card,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.divider, width: 1),
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      style: const TextStyle(
+                        color: AppColors.white,
+                        fontSize: 13,
+                      ),
+                      cursorColor: AppColors.accent,
+                      decoration: InputDecoration(
+                        hintText: 'Search staff by name, phone or role...',
+                        hintStyle: const TextStyle(
+                          color: AppColors.muted,
+                          fontSize: 12.5,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: AppColors.muted,
+                          size: 18,
+                        ),
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: AppColors.muted,
+                                  size: 16,
+                                ),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() => _searchQuery = '');
+                                },
+                              )
+                            : null,
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 11,
+                        ),
+                      ),
+                      onChanged: (val) => setState(() => _searchQuery = val),
                     ),
                   ),
-                ],
-              ),
-
-              // + Add Staff Button
-              ElevatedButton.icon(
-                onPressed: () => _openAddStaffPage(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.card,
-                  side: const BorderSide(color: AppColors.accent, width: 1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 9,
-                  ),
-                  elevation: 0,
                 ),
-                icon: const Icon(Icons.add, color: AppColors.accent, size: 16),
-                label: const Text(
-                  'Add Staff',
-                  style: TextStyle(
-                    color: AppColors.accent,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
+                const SizedBox(width: 8),
 
-          // ── Search Bar with Filter Icon ────────────────────────────────────
-          Row(
-            children: [
-              Expanded(
-                child: Container(
+                // Filter icon button
+                Container(
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
                     color: AppColors.card,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: AppColors.divider, width: 1),
                   ),
-                  child: TextField(
-                    controller: _searchController,
-                    style: const TextStyle(
-                      color: AppColors.white,
-                      fontSize: 13,
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.filter_alt_outlined,
+                      color: AppColors.muted,
+                      size: 20,
                     ),
-                    cursorColor: AppColors.accent,
-                    decoration: InputDecoration(
-                      hintText: 'Search staff by name, phone or role...',
-                      hintStyle: TextStyle(
-                        color: AppColors.muted.withValues(alpha: 0.5),
-                        fontSize: 12,
-                      ),
-                      prefixIcon: const Icon(
-                        Icons.search,
-                        color: AppColors.accent,
-                        size: 18,
-                      ),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(
-                                Icons.close,
-                                color: AppColors.muted,
-                                size: 16,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _searchQuery = '';
-                                  _searchController.clear();
-                                });
-                              },
-                            )
-                          : null,
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 11),
-                    ),
-                    onChanged: (val) {
-                      setState(() {
-                        _searchQuery = val;
-                      });
-                    },
+                    onPressed: () => _showFilterModal(),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
+              ],
+            ),
+            const SizedBox(height: 14),
 
-              // Filter Icon Button
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppColors.card,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.divider, width: 1),
-                ),
-                child: IconButton(
-                  icon: const Icon(
-                    Icons.filter_alt_outlined,
-                    color: AppColors.muted,
-                    size: 20,
-                  ),
-                  onPressed: () => _showFilterModal(),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-
-          // ── Filter Horizontal Tabs ─────────────────────────────────────────
-          SizedBox(
-            height: 34,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _filterTabs.length,
-              separatorBuilder: (context, index) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final tab = _filterTabs[index];
-                final isSelected = _selectedFilter == tab;
-
-                return InkWell(
-                  onTap: () => setState(() => _selectedFilter = tab),
-                  borderRadius: BorderRadius.circular(20),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppColors.accent.withValues(alpha: 0.15)
-                          : AppColors.card,
+            // ── Filter Horizontal Tabs (Pills) ────────────────────────────────
+            SizedBox(
+              height: 36,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                itemCount: _filterTabs.length,
+                itemBuilder: (context, index) {
+                  final tab = _filterTabs[index];
+                  final isSelected = _selectedFilter == tab;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: InkWell(
+                      onTap: () => setState(() => _selectedFilter = tab),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isSelected
-                            ? AppColors.accent
-                            : AppColors.divider,
-                        width: 1,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.accent.withValues(alpha: 0.15)
+                              : AppColors.card,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isSelected
+                                ? AppColors.accent
+                                : AppColors.divider,
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          tab,
+                          style: TextStyle(
+                            color: isSelected ? AppColors.accent : AppColors.muted,
+                            fontSize: 12,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                          ),
+                        ),
                       ),
                     ),
-                    child: Text(
-                      tab,
-                      style: TextStyle(
-                        color: isSelected ? AppColors.accent : AppColors.muted,
-                        fontSize: 12,
-                        fontWeight: isSelected
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-
-          // ── Staff Cards List ───────────────────────────────────────────────
-          if (staffList.isEmpty)
-            _buildEmptyState()
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: staffList.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                return _buildStaffCard(staffList[index]);
-              },
-            ),
-
-          const SizedBox(height: 30),
-        ],
-      ),
-    );
-  }
+            const SizedBox(height: 16),
+          ],
+        ),
+        initialLoadingWidget: ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: 4,
+          separatorBuilder: (context, index) => const SizedBox(height: 12),
+          itemBuilder: (context, index) => const SkeletonStaffCard(),
+        ),
+        emptyWidget: _buildEmptyState(),
+        itemBuilder: (context, staff, index) => _buildStaffCard(staff),
+      );
+    }
 
   // ── Staff Card Widget ───────────────────────────────────────────────────────
   Widget _buildStaffCard(StaffModel s) {
@@ -606,30 +644,37 @@ class _StaffListPageState extends State<StaffListPage> {
 
           // ── Stats 4-Column Row ─────────────────────────────────────────────
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             decoration: BoxDecoration(
               color: AppColors.inputFill,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildStatColumn(
-                  "Today's Works",
-                  '${s.todayWorks}',
-                  AppColors.blue,
+                Expanded(
+                  child: _buildStatColumn(
+                    "Today's Works",
+                    '${s.todayWorks}',
+                    AppColors.blue,
+                  ),
                 ),
-                _buildStatColumn(
-                  'Completed',
-                  '${s.completedWorks}',
-                  AppColors.green,
+                Expanded(
+                  child: _buildStatColumn(
+                    'Completed',
+                    '${s.completedWorks}',
+                    AppColors.green,
+                  ),
                 ),
-                _buildStatColumn(
-                  'Current Work',
-                  s.currentWork,
-                  AppColors.white,
+                Expanded(
+                  child: _buildStatColumn(
+                    'Current Work',
+                    s.currentWork,
+                    AppColors.white,
+                  ),
                 ),
-                _buildAttendanceColumn(s.attendance),
+                Expanded(
+                  child: _buildAttendanceColumn(s.attendance),
+                ),
               ],
             ),
           ),
@@ -668,7 +713,7 @@ class _StaffListPageState extends State<StaffListPage> {
                 onTap: () => _showStaffQuickMenu(s),
                 borderRadius: BorderRadius.circular(6),
                 child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                   child: Icon(
                     Icons.more_horiz,
                     color: AppColors.muted,
@@ -688,17 +733,25 @@ class _StaffListPageState extends State<StaffListPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(color: AppColors.muted, fontSize: 10),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            maxLines: 1,
+            style: const TextStyle(color: AppColors.muted, fontSize: 9.5),
+          ),
         ),
         const SizedBox(height: 2),
-        Text(
-          value,
-          style: TextStyle(
-            color: valueColor,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            value,
+            maxLines: 1,
+            style: TextStyle(
+              color: valueColor,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
       ],
@@ -713,17 +766,25 @@ class _StaffListPageState extends State<StaffListPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Attendance',
-          style: TextStyle(color: AppColors.muted, fontSize: 10),
+        const FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            'Attendance',
+            maxLines: 1,
+            style: TextStyle(color: AppColors.muted, fontSize: 9.5),
+          ),
         ),
         const SizedBox(height: 2),
-        Text(
-          attendance,
-          style: TextStyle(
-            color: col,
-            fontSize: 11.5,
-            fontWeight: FontWeight.w700,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            attendance,
+            maxLines: 1,
+            style: TextStyle(
+              color: col,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
       ],
@@ -744,20 +805,24 @@ class _StaffListPageState extends State<StaffListPage> {
       bg = AppColors.red.withValues(alpha: 0.15);
       border = AppColors.red.withValues(alpha: 0.4);
       text = AppColors.red;
+    } else if (status == 'Inactive') {
+      bg = AppColors.muted.withValues(alpha: 0.15);
+      border = AppColors.muted.withValues(alpha: 0.4);
+      text = AppColors.muted;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: border, width: 1),
       ),
       child: Text(
         status,
         style: TextStyle(
           color: text,
-          fontSize: 10,
+          fontSize: 10.5,
           fontWeight: FontWeight.w700,
         ),
       ),
@@ -801,18 +866,25 @@ class _StaffListPageState extends State<StaffListPage> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(6),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: AppColors.accent),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: const TextStyle(
-                color: AppColors.white,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+            Icon(icon, size: 13.5, color: AppColors.accent),
+            const SizedBox(width: 3.5),
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
           ],

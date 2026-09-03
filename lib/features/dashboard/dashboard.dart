@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/core/widgets/skeleton_loader.dart';
 import 'package:maa_tara/features/customers/add_customer.dart';
 import 'package:maa_tara/features/staff/staff_list.dart';
 import 'package:maa_tara/features/work/create_work.dart';
@@ -19,6 +20,14 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  bool _isLoading = false;
+
+  Future<void> _handleRefresh() async {
+    setState(() => _isLoading = true);
+    await Future.delayed(const Duration(milliseconds: 800));
+    if (mounted) setState(() => _isLoading = false);
+  }
+
   String get _currentFormattedDate {
     final now = DateTime.now();
     const months = [
@@ -54,11 +63,20 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    if (_isLoading) {
+      return const SkeletonDashboardView();
+    }
+
+    return RefreshIndicator(
+      onRefresh: _handleRefresh,
+      color: _C.accent,
+      backgroundColor: _C.card,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           // ── Welcome Row ────────────────────────────────────────────────
           Row(
             children: [
@@ -160,7 +178,8 @@ class _DashboardPageState extends State<DashboardPage> {
           const SizedBox(height: 24),
         ],
       ),
-    );
+    ),
+  );
   }
 
   // ── Stats Grid ──────────────────────────────────────────────────────────────
@@ -642,24 +661,29 @@ class _DashboardPageState extends State<DashboardPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'WORK STATUS',
-                style: TextStyle(
-                  color: _C.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
+              const Expanded(
+                child: Text(
+                  'WORK STATUS',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: _C.white,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
+                  ),
                 ),
               ),
+              const SizedBox(width: 4),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                 decoration: BoxDecoration(
                   color: _C.divider,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: const Text(
                   'This Week',
-                  style: TextStyle(color: _C.muted, fontSize: 9),
+                  style: TextStyle(color: _C.muted, fontSize: 8.5),
                 ),
               ),
             ],
@@ -667,8 +691,8 @@ class _DashboardPageState extends State<DashboardPage> {
           const SizedBox(height: 12),
           Center(
             child: SizedBox(
-              width: 110,
-              height: 110,
+              width: 100,
+              height: 100,
               child: CustomPaint(
                 painter: _DonutChartPainter(
                   segments: const [
@@ -686,13 +710,13 @@ class _DashboardPageState extends State<DashboardPage> {
                         '36',
                         style: TextStyle(
                           color: _C.white,
-                          fontSize: 20,
+                          fontSize: 18,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                       Text(
                         'Total',
-                        style: TextStyle(color: _C.muted, fontSize: 10),
+                        style: TextStyle(color: _C.muted, fontSize: 9.5),
                       ),
                     ],
                   ),
@@ -716,23 +740,30 @@ class _DashboardPageState extends State<DashboardPage> {
       child: Row(
         children: [
           Container(
-            width: 8,
-            height: 8,
+            width: 7,
+            height: 7,
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
-          const SizedBox(width: 5),
+          const SizedBox(width: 4),
           Expanded(
             child: Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(color: _C.muted, fontSize: 9),
             ),
           ),
-          Text(
-            value,
-            style: const TextStyle(
-              color: _C.white,
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
+          const SizedBox(width: 2),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: const TextStyle(
+                color: _C.white,
+                fontSize: 8.5,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -754,25 +785,30 @@ class _DashboardPageState extends State<DashboardPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'INVENTORY\nMOVEMENT',
-                style: TextStyle(
-                  color: _C.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
-                  height: 1.3,
+              const Expanded(
+                child: Text(
+                  'INVENTORY\nMOVEMENT',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: _C.white,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
+                    height: 1.2,
+                  ),
                 ),
               ),
+              const SizedBox(width: 4),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                 decoration: BoxDecoration(
                   color: _C.divider,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: const Text(
                   'This Week',
-                  style: TextStyle(color: _C.muted, fontSize: 9),
+                  style: TextStyle(color: _C.muted, fontSize: 8.5),
                 ),
               ),
             ],

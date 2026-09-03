@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/core/widgets/paginated_list.dart';
+import 'package:maa_tara/core/widgets/skeleton_loader.dart';
 import 'package:maa_tara/features/customers/add_customer.dart';
 import 'package:maa_tara/features/customers/customer_details.dart';
 import 'package:maa_tara/features/work/create_work.dart';
@@ -273,12 +275,38 @@ class CustomerListPage extends StatefulWidget {
   State<CustomerListPage> createState() => _CustomerListPageState();
 }
 
-// Backward compatibility alias
-typedef CustomerPage = CustomerListPage;
-
 class _CustomerListPageState extends State<CustomerListPage> {
+  bool _isLoading = false;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+
+  // Pagination state
+  int _currentPage = 1;
+  static const int _pageSize = 6;
+  bool _isLoadingMore = false;
+
+  Future<void> _handleRefresh() async {
+    setState(() => _isLoading = true);
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (mounted) {
+      setState(() {
+        _currentPage = 1;
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _handleLoadMore() async {
+    if (_isLoadingMore || !_hasMore) return;
+    setState(() => _isLoadingMore = true);
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (mounted) {
+      setState(() {
+        _currentPage++;
+        _isLoadingMore = false;
+      });
+    }
+  }
 
   List<CustomerModel> get _filteredCustomers {
     final list = CustomerRepository.customers;
@@ -293,6 +321,14 @@ class _CustomerListPageState extends State<CustomerListPage> {
     }).toList();
   }
 
+  List<CustomerModel> get _paginatedCustomers {
+    final all = _filteredCustomers;
+    final end = (_currentPage * _pageSize).clamp(0, all.length);
+    return all.sublist(0, end);
+  }
+
+  bool get _hasMore => _paginatedCustomers.length < _filteredCustomers.length;
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -301,15 +337,19 @@ class _CustomerListPageState extends State<CustomerListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final customers = _filteredCustomers;
+    final customers = _paginatedCustomers;
 
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Column(
+        child: PaginatedListView<CustomerModel>(
+          items: customers,
+          isInitialLoading: _isLoading,
+          isLoadingMore: _isLoadingMore,
+          hasMore: _hasMore,
+          onRefresh: _handleRefresh,
+          onLoadMore: _handleLoadMore,
+          header: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── Header Row: Title & + Add Customer Button ──────────────────
@@ -443,24 +483,17 @@ class _CustomerListPageState extends State<CustomerListPage> {
                 ],
               ),
               const SizedBox(height: 16),
-
-              // ── Customer Cards List ─────────────────────────────────────────
-              if (customers.isEmpty)
-                _buildEmptyState()
-              else
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: customers.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    return _buildCustomerCard(customers[index]);
-                  },
-                ),
-
-              const SizedBox(height: 24),
             ],
           ),
+          initialLoadingWidget: ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: 5,
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            itemBuilder: (context, index) => const SkeletonCustomerCard(),
+          ),
+          emptyWidget: _buildEmptyState(),
+          itemBuilder: (context, customer, index) => _buildCustomerCard(customer),
         ),
       ),
     );

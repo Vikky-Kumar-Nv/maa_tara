@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:maa_tara/core/constants/colors.dart';
+import 'package:maa_tara/core/widgets/paginated_list.dart';
+import 'package:maa_tara/core/widgets/skeleton_loader.dart';
 import 'package:maa_tara/features/work/create_work.dart';
 import 'package:maa_tara/features/work/job_view.dart';
 
@@ -153,20 +155,49 @@ class WorkPage extends StatefulWidget {
 typedef JobPage = WorkPage;
 
 class _WorkPageState extends State<WorkPage> {
+  bool _isLoading = false;
   String _selectedFilter = 'All';
   String _searchQuery = '';
   bool _isSearchExpanded = false;
   final TextEditingController _searchController = TextEditingController();
 
+  // Pagination state
+  int _currentPage = 1;
+  static const int _pageSize = 6;
+  bool _isLoadingMore = false;
+
   final List<String> _filters = [
     'All',
-    'Pending',
     'In Progress',
+    'Pending',
     'On Hold',
     'Completed',
   ];
 
-  List<WorkModel> get _filteredWorks {
+  Future<void> _handleRefresh() async {
+    setState(() => _isLoading = true);
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (mounted) {
+      setState(() {
+        _currentPage = 1;
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _handleLoadMore() async {
+    if (_isLoadingMore || !_hasMore) return;
+    setState(() => _isLoadingMore = true);
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (mounted) {
+      setState(() {
+        _currentPage++;
+        _isLoadingMore = false;
+      });
+    }
+  }
+
+  List<WorkModel> get _allFilteredWorks {
     return WorkRepository.works.where((work) {
       // Filter by status tab
       bool matchesStatus = true;
@@ -196,6 +227,14 @@ class _WorkPageState extends State<WorkPage> {
     }).toList();
   }
 
+  List<WorkModel> get _paginatedWorks {
+    final all = _allFilteredWorks;
+    final end = (_currentPage * _pageSize).clamp(0, all.length);
+    return all.sublist(0, end);
+  }
+
+  bool get _hasMore => _paginatedWorks.length < _allFilteredWorks.length;
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -217,11 +256,16 @@ class _WorkPageState extends State<WorkPage> {
 
   @override
   Widget build(BuildContext context) {
-    final works = _filteredWorks;
+    final works = _paginatedWorks;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Column(
+    return PaginatedListView<WorkModel>(
+      items: works,
+      isInitialLoading: _isLoading,
+      isLoadingMore: _isLoadingMore,
+      hasMore: _hasMore,
+      onRefresh: _handleRefresh,
+      onLoadMore: _handleLoadMore,
+      header: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Page Header: Title + Create Work Button ────────────────────────
@@ -278,22 +322,17 @@ class _WorkPageState extends State<WorkPage> {
           // ── Status Filter Tabs ─────────────────────────────────────────────
           _buildStatusFilterTabs(),
           const SizedBox(height: 16),
-
-          // ── Work Cards List ─────────────────────────────────────────────────
-          if (works.isEmpty)
-            _buildEmptyState()
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: works.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) => _buildWorkCard(works[index]),
-            ),
-
-          const SizedBox(height: 24),
         ],
       ),
+      initialLoadingWidget: ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: 4,
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        itemBuilder: (context, index) => const SkeletonWorkCard(),
+      ),
+      emptyWidget: _buildEmptyState(),
+      itemBuilder: (context, work, index) => _buildWorkCard(work),
     );
   }
 
@@ -355,7 +394,7 @@ class _WorkPageState extends State<WorkPage> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(10),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 6),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         decoration: BoxDecoration(
           color: isActive ? _C.accent.withValues(alpha: 0.18) : _C.card,
           borderRadius: BorderRadius.circular(10),
@@ -366,15 +405,22 @@ class _WorkPageState extends State<WorkPage> {
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 15, color: isActive ? _C.accent : _C.white),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: TextStyle(
-                color: isActive ? _C.accent : _C.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+            Icon(icon, size: 14, color: isActive ? _C.accent : _C.white),
+            const SizedBox(width: 4),
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  style: TextStyle(
+                    color: isActive ? _C.accent : _C.white,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
           ],
@@ -626,6 +672,8 @@ class _WorkPageState extends State<WorkPage> {
               Expanded(
                 child: Text(
                   'Assigned: ${work.assignedStaff}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: _C.white,
                     fontSize: 11.5,
@@ -633,11 +681,13 @@ class _WorkPageState extends State<WorkPage> {
                   ),
                 ),
               ),
+              const SizedBox(width: 6),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
                     work.date,
+                    maxLines: 1,
                     style: const TextStyle(
                       color: _C.muted,
                       fontSize: 10,
@@ -646,6 +696,7 @@ class _WorkPageState extends State<WorkPage> {
                   ),
                   Text(
                     work.time,
+                    maxLines: 1,
                     style: const TextStyle(color: _C.muted, fontSize: 9.5),
                   ),
                 ],
@@ -742,18 +793,25 @@ class _WorkPageState extends State<WorkPage> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(6),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: _C.accent),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: const TextStyle(
-                color: _C.white,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+            Icon(icon, size: 13.5, color: _C.accent),
+            const SizedBox(width: 3.5),
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  style: const TextStyle(
+                    color: _C.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
           ],
